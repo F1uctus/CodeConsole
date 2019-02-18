@@ -1,15 +1,18 @@
 ﻿using System;
+using System.Drawing;
 
 namespace ConsoleExtensions {
     /// <summary>
-    ///     Implementation of Axion toolset UI using <see cref="Console" /> class.
+    ///     Extension methods for [<see cref="Console" />] class,
+    ///     to simplify console interaction.
     /// </summary>
-    internal static class ConsoleUI {
-        public static string Read(string prompt, ConsoleColor withColor = ConsoleColor.White) {
+    public static class ConsoleUI {
+        public static string Read(string prompt, ConsoleColor fontColor = ConsoleColor.White) {
             var result = "";
             WithFontColor(
-                withColor, () => {
-                    var editor = new ConsoleCodeEditor(true, false, prompt);
+                fontColor,
+                () => {
+                    var editor = new ConsoleCodeEditor(true, prompt: prompt);
                     result = editor.RunSession()[0];
                 }
             );
@@ -25,7 +28,7 @@ namespace ConsoleExtensions {
             Console.CursorLeft = fromX;
         }
 
-        #region Simple logging functions
+        #region Simple logging functions (just highlighting)
 
         public static void LogInfo(string message) {
             WriteLine((message, ConsoleColor.DarkCyan));
@@ -43,8 +46,8 @@ namespace ConsoleExtensions {
         ///     Writes messages to the standard output stream.
         /// </summary>
         public static void Write(params string[] messages) {
-            for (var i = 0; i < messages.Length; i++) {
-                Console.Write(messages[i]);
+            foreach (string message in messages) {
+                Console.Write(message);
             }
         }
 
@@ -54,7 +57,7 @@ namespace ConsoleExtensions {
         public static void Write(params (string text, ConsoleColor color)[] messages) {
             for (var i = 0; i < messages.Length; i++) {
                 // ReSharper disable once AccessToModifiedClosure
-                WithFontColor(messages[i].color, () => { Console.Write(messages[i].text); });
+                WithFontColor(messages[i].color, () => Console.Write(messages[i].text));
             }
         }
 
@@ -84,30 +87,11 @@ namespace ConsoleExtensions {
         public static void WriteLine(params (string text, ConsoleColor color)[] messages) {
             for (var i = 0; i < messages.Length; i++) {
                 if (i == messages.Length - 1) {
-                    WithFontColor(messages[i].color, () => { Console.WriteLine(messages[i].text); });
+                    WithFontColor(messages[i].color, () => Console.WriteLine(messages[i].text));
                     return;
                 }
                 // ReSharper disable once AccessToModifiedClosure
-                WithFontColor(messages[i].color, () => { Console.Write(messages[i].text); });
-            }
-        }
-
-        /// <summary>
-        ///     Writes messages with line terminators to the standard output stream.
-        /// </summary>
-        public static void WriteLines(params string[] lines) {
-            for (var i = 0; i < lines.Length; i++) {
-                Console.WriteLine(lines[i]);
-            }
-        }
-
-        /// <summary>
-        ///     Writes colored messages with line terminators to the standard output stream.
-        /// </summary>
-        public static void WriteLines(params (string text, ConsoleColor color)[] lines) {
-            for (var i = 0; i < lines.Length; i++) {
-                // ReSharper disable once AccessToModifiedClosure
-                WithFontColor(lines[i].color, () => { Console.WriteLine(lines[i].text); });
+                WithFontColor(messages[i].color, () => Console.Write(messages[i].text));
             }
         }
 
@@ -119,7 +103,7 @@ namespace ConsoleExtensions {
         ///     Performs action in <see cref="Console" />, then returns
         ///     back to previous cursor position in <see cref="Console" />.
         /// </summary>
-        internal static void WithCurrentPosition(Action action) {
+        public static void WithCurrentPosition(Action action) {
             // save position
             int sX = Console.CursorLeft;
             int sY = Console.CursorTop;
@@ -134,7 +118,24 @@ namespace ConsoleExtensions {
         ///     performs action, then returns back to previous
         ///     cursor position in <see cref="Console" />.
         /// </summary>
-        internal static void WithPosition(int x, int y, Action action) {
+        public static void WithPosition(Point position, Action action) {
+            // save position
+            int sX = Console.CursorLeft;
+            int sY = Console.CursorTop;
+            // move cursor
+            Console.SetCursorPosition(position.X, position.Y);
+            // do action
+            action();
+            // reset cursor
+            Console.SetCursorPosition(sX, sY);
+        }
+
+        /// <summary>
+        ///     Moves to specified <see cref="Console" /> position,
+        ///     performs action, then returns back to previous
+        ///     cursor position in <see cref="Console" />.
+        /// </summary>
+        public static void WithPosition(int x, int y, Action action) {
             // save position
             int sX = Console.CursorLeft;
             int sY = Console.CursorTop;
@@ -150,7 +151,7 @@ namespace ConsoleExtensions {
         ///     Sets <see cref="Console.ForegroundColor" /> to &lt;<see cref="color" />&gt;,
         ///     performs action, then returns back to previously used color.
         /// </summary>
-        internal static void WithFontColor(ConsoleColor color, Action action) {
+        public static void WithFontColor(ConsoleColor color, Action action) {
             // save color
             ConsoleColor prevColor = Console.ForegroundColor;
             // set new color
@@ -159,6 +160,21 @@ namespace ConsoleExtensions {
             action();
             // reset color
             Console.ForegroundColor = prevColor;
+        }
+
+        /// <summary>
+        ///     Sets <see cref="Console.ForegroundColor" /> to &lt;<see cref="color" />&gt;,
+        ///     performs action, then returns back to previously used color.
+        /// </summary>
+        public static void WithBackColor(ConsoleColor color, Action action) {
+            // save color
+            ConsoleColor prevColor = Console.BackgroundColor;
+            // set new color
+            Console.BackgroundColor = color;
+            // do action
+            action();
+            // reset color
+            Console.BackgroundColor = prevColor;
         }
 
         #endregion
