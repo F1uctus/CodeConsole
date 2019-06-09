@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 
-namespace ConsoleExtensions {
+namespace CodeConsole {
     /// <summary>
     ///     Embedded in console code editor with optional
     ///     syntax highlighting & handy keyboard shortcuts.
     ///     Count of lines in editor is limited to
-    ///     <see cref="MaxHighlightedLinesCount" /> to prevent performance hurting.
+    ///     <see cref="maxHighlightedLinesCount" /> to prevent performance hurting.
     /// </summary>
     public partial class ConsoleCodeEditor {
         /// <summary>
@@ -43,7 +42,6 @@ namespace ConsoleExtensions {
             if (syntaxHighlighting) {
                 this.highlighter =
                     highlighter ?? throw new ArgumentNullException(nameof(highlighter));
-                this.highlighter.Editor = this;
             }
 
             this.singleLineMode     = singleLineMode;
@@ -75,7 +73,7 @@ namespace ConsoleExtensions {
             }
 
             editBoxPoint.Y = Console.CursorTop;
-            CursorX        = Line.Length;
+            cursorX        = Line.Length;
 
             // highlight first line
             lastRenderLinesCount = 1;
@@ -95,162 +93,190 @@ namespace ConsoleExtensions {
                 if (HandleViewAction(key)) {
                     continue;
                 }
-                newRenderStartPosition.Y = CursorY;
-                newRenderStartPosition.X = CursorX;
+
+                newRenderStartPosition.Y = cursorY;
+                newRenderStartPosition.X = cursorX;
 
                 exit = HandleEditAction(key);
             }
 
             DrawBottomFrame();
-            return lines.Count == 0 ? new[] { "" } : lines.ToArray();
+            return lines.Count == 0
+                ? new[] {
+                    ""
+                }
+                : lines.ToArray();
         }
 
         private bool HandleEditAction(ConsoleKeyInfo key) {
             switch (key.Key) {
-                case ConsoleKey.Escape: {
-                    // use [Enter] in single line mode instead.
-                    if (singleLineMode) {
-                        break;
-                    }
-                    key = Console.ReadKey(true);
-                    if (key.Key == ConsoleKey.Escape) {
-                        // [Esc] pressed twice -> exit
-                        return true;
-                    }
+            case ConsoleKey.Escape: {
+                // use [Enter] in single line mode instead.
+                if (singleLineMode) {
                     break;
                 }
-                case ConsoleKey.Enter: {
-                    if (singleLineMode) {
-                        return true;
-                    }
-                    SplitLine();
-                    break;
+
+                key = Console.ReadKey(true);
+                if (key.Key == ConsoleKey.Escape) {
+                    return true;
                 }
-                case ConsoleKey.Backspace: {
-                    EraseLeftChar();
-                    break;
-                }
-                case ConsoleKey.Delete: {
-                    EraseRightChar();
-                    break;
-                }
-                case ConsoleKey.Tab: {
-                    // Shift + Tab: outdent current tab
-                    if (key.Modifiers == ConsoleModifiers.Shift && Line.StartsWith(tabulation)) {
-                        Line = Line.Remove(0, tabulation.Length);
-                    }
-                    // if on the left side of cursor there are only whitespaces
-                    else if (string.IsNullOrWhiteSpace(Line.Substring(0, CursorX))) {
-                        CursorX += tabulation.Length;
-                        Line    =  tabulation + lines[CursorY];
-                    }
-                    else {
-                        WriteValue(' ');
-                    }
-                    break;
-                }
-                case ConsoleKey.Insert: {
-                    // do not process insert key
-                    break;
-                }
-                // TODO add something for FN keys
-                case ConsoleKey.F1:
-                case ConsoleKey.F2:
-                case ConsoleKey.F3:
-                case ConsoleKey.F4:
-                case ConsoleKey.F5:
-                case ConsoleKey.F6:
-                case ConsoleKey.F7:
-                case ConsoleKey.F8:
-                case ConsoleKey.F9:
-                case ConsoleKey.F10:
-                case ConsoleKey.F11:
-                case ConsoleKey.F12: {
-                    break;
-                }
-                // any other char that should be passed in code
-                default: {
-                    WriteValue(key.KeyChar);
-                    break;
-                }
+
+                break;
             }
+
+            case ConsoleKey.Enter: {
+                if (singleLineMode) {
+                    return true;
+                }
+
+                SplitLine();
+                break;
+            }
+
+            case ConsoleKey.Backspace: {
+                EraseLeftChar();
+                break;
+            }
+
+            case ConsoleKey.Delete: {
+                EraseRightChar();
+                break;
+            }
+
+            case ConsoleKey.Tab: {
+                // Shift + Tab: outdent current tab
+                if (key.Modifiers == ConsoleModifiers.Shift
+                    && Line.StartsWith(tabulation)) {
+                    Line = Line.Remove(0, tabulation.Length);
+                }
+                // if on the left side of cursor there are only whitespaces
+                else if (string.IsNullOrWhiteSpace(Line.Substring(0, cursorX))) {
+                    cursorX += tabulation.Length;
+                    Line    =  tabulation + lines[cursorY];
+                }
+                else {
+                    WriteValue(' ');
+                }
+
+                break;
+            }
+
+            case ConsoleKey.Insert: {
+                // do not process insert key
+                break;
+            }
+
+            // TODO (UI) add something for FN keys
+            case ConsoleKey.F1:
+            case ConsoleKey.F2:
+            case ConsoleKey.F3:
+            case ConsoleKey.F4:
+            case ConsoleKey.F5:
+            case ConsoleKey.F6:
+            case ConsoleKey.F7:
+            case ConsoleKey.F8:
+            case ConsoleKey.F9:
+            case ConsoleKey.F10:
+            case ConsoleKey.F11:
+            case ConsoleKey.F12: {
+                break;
+            }
+
+            // any other char that should be passed in code
+            default: {
+                WriteValue(key.KeyChar);
+                break;
+            }
+            }
+
             return false;
         }
 
         private bool HandleViewAction(ConsoleKeyInfo key) {
             var isViewFunction = true;
             switch (key.Key) {
-                #region Move cursor with arrows
+            #region Move cursor with arrows
 
-                case ConsoleKey.LeftArrow: {
-                    MoveCursor(MoveDirection.Left);
-                    break;
-                }
-                case ConsoleKey.RightArrow: {
-                    MoveCursor(MoveDirection.Right);
-                    break;
-                }
-                case ConsoleKey.UpArrow: {
-                    MoveCursor(MoveDirection.Up);
-                    break;
-                }
-                case ConsoleKey.DownArrow: {
-                    MoveCursor(MoveDirection.Down);
-                    break;
-                }
-
-                #endregion
-
-                case ConsoleKey.Home: {
-                    // to line start
-                    CursorX = 0;
-                    break;
-                }
-                case ConsoleKey.End: {
-                    // to line end
-                    CursorX = Line.Length;
-                    break;
-                }
-                case ConsoleKey.PageUp: {
-                    if (CursorY - 10 >= 0) {
-                        CursorY -= 10;
-                    }
-                    else {
-                        CursorY = 0;
-                    }
-                    if (CursorX > Line.Length) {
-                        CursorX = Line.Length;
-                    }
-                    break;
-                }
-                case ConsoleKey.PageDown: {
-                    if (CursorY + 10 < lines.Count) {
-                        CursorY += 10;
-                    }
-                    else {
-                        CursorY = lines.Count - 1;
-                    }
-                    if (CursorX > Line.Length) {
-                        CursorX = Line.Length;
-                    }
-                    break;
-                }
-                default: {
-                    isViewFunction = false;
-                    break;
-                }
+            case ConsoleKey.LeftArrow: {
+                MoveCursor(MoveDirection.Left);
+                break;
             }
+
+            case ConsoleKey.RightArrow: {
+                MoveCursor(MoveDirection.Right);
+                break;
+            }
+
+            case ConsoleKey.UpArrow: {
+                MoveCursor(MoveDirection.Up);
+                break;
+            }
+
+            case ConsoleKey.DownArrow: {
+                MoveCursor(MoveDirection.Down);
+                break;
+            }
+
+            #endregion
+
+            case ConsoleKey.Home: {
+                // to line start
+                cursorX = 0;
+                break;
+            }
+
+            case ConsoleKey.End: {
+                // to line end
+                cursorX = Line.Length;
+                break;
+            }
+
+            case ConsoleKey.PageUp: {
+                if (cursorY - 10 >= 0) {
+                    cursorY -= 10;
+                }
+                else {
+                    cursorY = 0;
+                }
+
+                if (cursorX > Line.Length) {
+                    cursorX = Line.Length;
+                }
+
+                break;
+            }
+
+            case ConsoleKey.PageDown: {
+                if (cursorY + 10 < lines.Count) {
+                    cursorY += 10;
+                }
+                else {
+                    cursorY = lines.Count - 1;
+                }
+
+                if (cursorX > Line.Length) {
+                    cursorX = Line.Length;
+                }
+
+                break;
+            }
+
+            default: {
+                isViewFunction = false;
+                break;
+            }
+            }
+
             return isViewFunction;
         }
 
         /// <summary>
         ///     Occurs when lines count in editor exceeds maximal allowed value.
         /// </summary>
-        public class FileTooLargeException : Exception {
+        private class FileTooLargeException : Exception {
             public FileTooLargeException() : base(
                 "File too large to display. Please use external editor."
-            ) {
-            }
+            ) { }
         }
 
         #region Editor settings
@@ -306,13 +332,13 @@ namespace ConsoleExtensions {
         ///     Current editing line.
         ///     This property automatically calls
         ///     <see cref="RenderCode" /> when modified.
-        ///     You should use <see cref="lines" />[<see cref="CursorY" />] when you
+        ///     You should use <see cref="lines" />[<see cref="cursorY" />] when you
         ///     don't want to re-render input instead.
         /// </summary>
         private string Line {
-            get => lines[CursorY];
+            get => lines[cursorY];
             set {
-                lines[CursorY] = value;
+                lines[cursorY] = value;
                 // if line modified - it should be re-rendered
                 RenderCode();
             }
@@ -324,23 +350,25 @@ namespace ConsoleExtensions {
         ///     Automatically grows or reduces <see cref="Console.BufferWidth" />
         ///     based on longest line length.
         /// </summary>
-        public int CursorX {
+        private int cursorX {
             // check that value is in bounds
             get => Console.CursorLeft - editBoxPoint.X;
-            private set {
+            set {
                 int length = value + editBoxPoint.X;
                 // resize buffer
-                if (length >= Console.BufferWidth) {
-                    // grow buffer width if cursor out of it.
-                    Console.BufferWidth = length + 1;
-                }
-                else {
-                    // buffer width should be equal to the longest line length.
-                    int maxLength = lines.Max(x => x.Length) + editBoxPoint.X;
-                    if (maxLength > Console.WindowWidth) {
-                        Console.BufferWidth = maxLength + 1;
-                    }
-                }
+//                if (length >= Console.BufferWidth) {
+//                    // grow buffer width if cursor out of it.
+//                    Console.BufferWidth = length + 1;
+//                }
+//                else {
+//                    // buffer width should be equal to the longest line length.
+//                    int maxLength =
+//                        lines.Max(x => x.Length) + editBoxPoint.X;
+//                    if (maxLength > Console.WindowWidth) {
+//                        Console.BufferWidth = maxLength + 1;
+//                    }
+//                }
+
                 Console.CursorLeft = length;
             }
         }
@@ -349,9 +377,9 @@ namespace ConsoleExtensions {
         ///     A wrapper over <see cref="Console.CursorTop" />.
         ///     Position is relative to <see cref="editBoxPoint" />.
         /// </summary>
-        public int CursorY {
+        private int cursorY {
             get => Console.CursorTop - editBoxPoint.Y;
-            private set => Console.CursorTop = value + editBoxPoint.Y;
+            set => Console.CursorTop = value + editBoxPoint.Y;
         }
 
         #endregion
@@ -363,20 +391,19 @@ namespace ConsoleExtensions {
         /// </summary>
         private void SplitLine() {
             newRenderStartPosition.X = 0;
-            string tailPiece = Line.Substring(CursorX);
+            string tailPiece = Line.Substring(cursorX);
             if (tailPiece.Length > 0) {
-                //newRenderStartPosition.Y++;
-                // cut current line
-                lines[CursorY] = lines[CursorY].Substring(0, CursorX);
+                lines[cursorY] = lines[cursorY].Substring(0, cursorX);
             }
 
             // add tail to next line
-            if (CursorY + 1 == lines.Count) {
+            if (cursorY + 1 == lines.Count) {
                 lines.Add(tailPiece);
             }
             else {
-                lines.Insert(CursorY + 1, tailPiece);
+                lines.Insert(cursorY + 1, tailPiece);
             }
+
             // re-render lower lines
             RenderCode();
             MoveToNextLineStart();
@@ -387,35 +414,40 @@ namespace ConsoleExtensions {
         /// </summary>
         private void EraseLeftChar() {
             // if on first line start
-            if (CursorX == 0 && CursorY == 0) {
+            if (cursorX == 0
+                && cursorY == 0) {
                 return;
             }
+
             // if cursor in current line
-            if (CursorX > 0) {
+            if (cursorX > 0) {
                 newRenderStartPosition.X--;
                 // if erasing empty end of line
-                if (CursorX == Line.Length && Line[CursorX - 1] == ' ') {
-                    lines[CursorY] = lines[CursorY].Substring(0, Line.Length - 1);
+                if (cursorX == Line.Length
+                    && Line[cursorX - 1] == ' ') {
+                    lines[cursorY] = lines[cursorY].Substring(0, Line.Length - 1);
                 }
                 else {
-                    Line = Line.Remove(CursorX - 1, 1);
+                    Line = Line.Remove(cursorX - 1, 1);
                 }
-                CursorX--;
+
+                cursorX--;
             }
             // cursor X == 0
             else {
                 string removingLine = Line;
-                lines.RemoveAt(CursorY);
-                CursorY--;
+                lines.RemoveAt(cursorY);
+                cursorY--;
                 // append removing line if it is not empty
                 if (removingLine.Length > 0) {
                     newRenderStartPosition.Y--;
-                    lines[CursorY] += removingLine;
-                    CursorX        =  Line.Length - removingLine.Length;
+                    lines[cursorY] += removingLine;
+                    cursorX        =  Line.Length - removingLine.Length;
                 }
                 else {
-                    CursorX = Line.Length;
+                    cursorX = Line.Length;
                 }
+
                 // re-render lower lines
                 RenderCode();
             }
@@ -426,28 +458,30 @@ namespace ConsoleExtensions {
         /// </summary>
         private void EraseRightChar() {
             // if on last line end
-            if (CursorY == lines.Count - 1 && CursorX == Line.Length) {
+            if (cursorY == lines.Count - 1
+                && cursorX == Line.Length) {
                 return;
             }
+
             // cursor doesn't move when removing right character
             ConsoleUI.WithCurrentPosition(
                 () => {
-                    if (CursorX == Line.Length) {
+                    if (cursorX == Line.Length) {
                         // remove current line
                         // append next line to current
-                        lines[CursorY] += lines[CursorY + 1];
+                        lines[cursorY] += lines[cursorY + 1];
                         // remove next line
-                        lines.RemoveAt(CursorY + 1);
+                        lines.RemoveAt(cursorY + 1);
                         RenderCode();
                     }
                     // if cursor inside the current line
-                    else if (Line.Substring(CursorX).TrimEnd().Length == 0) {
+                    else if (Line.Substring(cursorX).TrimEnd().Length == 0) {
                         // don't redraw line when at the right
                         // side of cursor are only whitespaces.
-                        lines[CursorY] = lines[CursorY].Substring(0, Line.Length - 1);
+                        lines[cursorY] = lines[cursorY].Substring(0, Line.Length - 1);
                     }
                     else {
-                        Line = Line.Remove(CursorX, 1);
+                        Line = Line.Remove(cursorX, 1);
                     }
                 }
             );
@@ -458,27 +492,28 @@ namespace ConsoleExtensions {
         /// </summary>
         private void WriteValue(char value) {
             // write value
-            if (CursorX == Line.Length) {
+            if (cursorX == Line.Length) {
                 // at end of line
                 if (syntaxHighlighting && !char.IsWhiteSpace(value)) {
                     Line += value;
                 }
                 else {
-                    lines[CursorY] += value;
+                    lines[cursorY] += value;
                     Console.Write(value);
                     return;
                 }
             }
-            else if (CursorX < Line.Length) {
-                Line = Line.Insert(CursorX, value.ToString());
+            else if (cursorX < Line.Length) {
+                Line = Line.Insert(cursorX, value.ToString());
             }
             else {
                 throw new ArgumentOutOfRangeException(
-                    nameof(CursorX),
+                    nameof(cursorX),
                     nameof(ConsoleCodeEditor) + ": cursor X went through end of line."
                 );
             }
-            CursorX++;
+
+            cursorX++;
         }
 
         #endregion

@@ -2,14 +2,12 @@
 using System.Collections.Generic;
 using System.Drawing;
 
-namespace ConsoleExtensions {
+namespace CodeConsole {
     public partial class ConsoleCodeEditor {
-        private const string defaultMessage = "No errors found.";
-
-        private static readonly List<Exception> blames = new List<Exception>();
-
-        private int   lastRenderLinesCount;
-        private Point newRenderStartPosition;
+        private const  string          defaultMessage = "No errors found.";
+        private static List<Exception> blames;
+        private        int             lastRenderLinesCount;
+        private        Point           newRenderStartPosition;
 
         /// <summary>
         ///     Full rewriting and highlighting of current code.
@@ -23,19 +21,20 @@ namespace ConsoleExtensions {
                     }
                     else if (!singleLineMode && linesCountDifference != 0) {
                         // rewrite all lines from cursorY
-                        for (; CursorY < lines.Count; CursorY++) {
+                        for (; cursorY < lines.Count; cursorY++) {
                             ClearLine();
-                            ConsoleUI.Write(Line);
+                            Console.Write(Line);
                         }
                     }
                     else {
                         ClearLine();
-                        ConsoleUI.Write(Line);
+                        Console.Write(Line);
                     }
+
                     // if line arrived
                     if (linesCountDifference == 1) {
                         // change line numbers below
-                        CursorY            = lines.Count - 1;
+                        cursorY            = lines.Count - 1;
                         Console.CursorLeft = 0;
                         PrintCurrentLineNumber();
                         linesCountDifference--;
@@ -43,7 +42,7 @@ namespace ConsoleExtensions {
                     // if line removed
                     else if (linesCountDifference == -1) {
                         // clear last line
-                        CursorY = lastRenderLinesCount - 1;
+                        cursorY = lastRenderLinesCount - 1;
                         ClearLine(true);
                         linesCountDifference++;
                     }
@@ -53,37 +52,36 @@ namespace ConsoleExtensions {
         }
 
         private void HighlightSyntax() {
-            blames.Clear();
             List<ColoredValue> values = highlighter.Highlight(
                 lines,
-                out newRenderStartPosition,
-                blames
+                ref newRenderStartPosition,
+                out blames
             );
 
-            CursorX = newRenderStartPosition.X;
-            CursorY = newRenderStartPosition.Y;
+            cursorX = newRenderStartPosition.X;
+            cursorY = newRenderStartPosition.Y;
             ClearLines(newRenderStartPosition.X, newRenderStartPosition.Y);
 
-            // TODO: add render of whitespaces (as · with dark-gray color)
+            // TODO (UI) add render of whitespaces (as · with dark-gray color)
             foreach (ColoredValue value in values) {
                 Console.ForegroundColor = value.Color;
                 //if (renderWhitespaces) {
                 //    values[i].Value = values[i].Value.Replace(' ', space);
-                //} TODO add whitespaces rendering
+                //}
                 if (value.Value.Contains("\n")) {
-                    string[] valueLines = value.Value.Split(
-                        new[] { '\n' },
-                        StringSplitOptions.None
-                    );
+                    string[] valueLines = value.Value.Split('\n');
                     for (var j = 0; j < valueLines.Length - 1; j++) {
                         Console.Write(valueLines[j]);
                         MoveToNextLineStart();
                     }
+
                     Console.Write(valueLines[valueLines.Length - 1]);
                     continue;
                 }
+
                 Console.Write(value.Value);
             }
+
             Console.ForegroundColor = ConsoleColor.White;
 
             // fill message box
@@ -104,7 +102,7 @@ namespace ConsoleExtensions {
 
         #region Editor view properties
 
-        public const int MaxHighlightedLinesCount = 300;
+        private const int maxHighlightedLinesCount = 300;
 
         /// <summary>
         ///     Width of line number field at left side of code editor.
@@ -118,8 +116,8 @@ namespace ConsoleExtensions {
 
         /// <summary>
         ///     (X, Y) position of editor's message box.
-        ///     (works only with <see cref="syntaxHighlighting" />
-        ///     and not in <see cref="singleLineMode" />).
+        ///     (works only with syntax highlighting
+        ///     and not in single line mode).
         /// </summary>
         private Point messageBoxPoint;
 
@@ -128,14 +126,15 @@ namespace ConsoleExtensions {
         #region Functions for drawing editor frames and simple GUI
 
         private void DrawTopFrame() {
-            ConsoleUI.WriteLine("Press [Esc] twice to exit code editor");
+            Console.WriteLine("Press [Esc] twice to exit code editor");
             if (syntaxHighlighting) {
+                Console.BufferWidth = 400;
                 // draw message box frame
                 ConsoleUI.Write(
                     ("┌─────" + new string('─', Console.BufferWidth - editBoxPoint.X) + "\n" + "| ",
                      ConsoleColor.DarkGray)
                 );
-                // save position of message box
+                // mark position of message box
                 messageBoxPoint.X = Console.CursorLeft;
                 messageBoxPoint.Y = Console.CursorTop;
                 // draw editor frame
@@ -154,16 +153,18 @@ namespace ConsoleExtensions {
         }
 
         private void DrawBottomFrame() {
-            if (!singleLineMode) {
-                // move to editor lower bound and
-                // render bottom frame
-                CursorY            = lines.Count;
-                Console.CursorLeft = 0;
-                ConsoleUI.WriteLine(
-                    ("─────┴" + new string('─', Console.BufferWidth - editBoxPoint.X),
-                     ConsoleColor.DarkGray)
-                );
+            if (singleLineMode) {
+                return;
             }
+
+            // move to editor lower bound and
+            // render bottom frame
+            cursorY            = lines.Count;
+            Console.CursorLeft = 0;
+            ConsoleUI.WriteLine(
+                ("─────┴" + new string('─', Console.BufferWidth - editBoxPoint.X),
+                 ConsoleColor.DarkGray)
+            );
         }
 
         /// <summary>
@@ -172,10 +173,9 @@ namespace ConsoleExtensions {
         ///     That number not included in code.
         /// </summary>
         private void PrintCurrentLineNumber() {
-            PrintLineNumber(CursorY + 1);
+            PrintLineNumber(cursorY + 1);
 
-            if (syntaxHighlighting && lines.Count > MaxHighlightedLinesCount) {
-                // file too large to display with syntax highlighting.
+            if (syntaxHighlighting && lines.Count > maxHighlightedLinesCount) {
                 throw new FileTooLargeException();
             }
         }
@@ -200,6 +200,7 @@ namespace ConsoleExtensions {
             else {
                 view += " ";
             }
+
             // append line number and right aligner
             view += lineNumber + " | ";
             ConsoleUI.Write((view, ConsoleColor.DarkGray));
@@ -209,17 +210,13 @@ namespace ConsoleExtensions {
 
         #region Clear functions
 
-        public void ClearLinesFromCurrent() {
-            ClearLines(0, CursorY);
-        }
-
-        public void ClearLines(int fromX, int fromY) {
+        private void ClearLines(int fromX, int fromY) {
             ConsoleUI.WithCurrentPosition(
                 () => {
-                    CursorY = fromY;
+                    cursorY = fromY;
                     ClearLine(false, fromX);
-                    CursorY++;
-                    for (; CursorY < lines.Count; CursorY++) {
+                    cursorY++;
+                    for (; cursorY < lines.Count; cursorY++) {
                         ClearLine();
                     }
                 }
@@ -253,7 +250,7 @@ namespace ConsoleExtensions {
                 messageBoxPoint,
                 () => ConsoleUI.Write(
                     (error.Message,
-                     error.Message.ToLower().StartsWith("error")
+                     error.Message.ToUpper().StartsWith("ERROR")
                          ? ConsoleColor.Red
                          : ConsoleColor.Yellow)
                 )
@@ -293,73 +290,81 @@ namespace ConsoleExtensions {
         /// <param name="count">Count of characters to move cursor by.</param>
         private void MoveCursor(MoveDirection direction, int count = 1) {
             switch (direction) {
-                case MoveDirection.Left: {
-                    // if reach first line start
-                    if (CursorY == 0 && CursorX - count < 0) {
-                        return;
-                    }
-                    // if fits in current line
-                    if (CursorX - count >= 0) {
-                        CursorX -= count;
-                    }
-                    // move line up
-                    else if (!singleLineMode) {
-                        CursorY--;
-                        CursorX = Line.Length; // no - 1
-                    }
-                    break;
+            case MoveDirection.Left: {
+                // if reach first line start
+                if (cursorY == 0
+                    && cursorX - count < 0) {
+                    return;
                 }
-                case MoveDirection.Right: {
-                    // if reach last line end
-                    if (CursorY == lines.Count - 1 && CursorX + count > Line.Length) {
-                        return;
-                    }
-                    // if fits in current line
-                    if (CursorX + count <= Line.Length) {
-                        CursorX += count;
-                    }
-                    // move line down
-                    else if (!singleLineMode) {
-                        CursorY++;
-                        CursorX = 0;
-                    }
-                    break;
+
+                // if fits in current line
+                if (cursorX - count >= 0) {
+                    cursorX -= count;
                 }
-                case MoveDirection.Up: {
-                    // if on first line
-                    if (CursorY == 0 || singleLineMode) {
-                        return;
-                    }
-                    CursorY--;
-                    // if cursor moves at empty space upside
-                    if (CursorX >= Line.Length) {
-                        CursorX = Line.Length;
-                    }
-                    break;
+                // move line up
+                else if (!singleLineMode) {
+                    cursorY--;
+                    cursorX = Line.Length; // no - 1
                 }
-                case MoveDirection.Down: {
-                    // if on last line
-                    if (CursorY == lines.Count - 1 || singleLineMode) {
-                        return;
-                    }
-                    CursorY++;
-                    // if cursor moves at empty space downside
-                    if (CursorX >= Line.Length) {
-                        CursorX = Line.Length;
-                    }
-                    break;
+
+                break;
+            }
+
+            case MoveDirection.Right: {
+                // if reach last line end
+                if (cursorY == lines.Count - 1
+                    && cursorX + count > Line.Length) {
+                    return;
                 }
+
+                // if fits in current line
+                if (cursorX + count <= Line.Length) {
+                    cursorX += count;
+                }
+                // move line down
+                else if (!singleLineMode) {
+                    cursorY++;
+                    cursorX = 0;
+                }
+
+                break;
+            }
+
+            case MoveDirection.Up: {
+                // if on first line
+                if (cursorY == 0 || singleLineMode) {
+                    return;
+                }
+
+                cursorY--;
+                // if cursor moves at empty space upside
+                if (cursorX >= Line.Length) {
+                    cursorX = Line.Length;
+                }
+
+                break;
+            }
+
+            case MoveDirection.Down: {
+                // if on last line
+                if (cursorY == lines.Count - 1 || singleLineMode) {
+                    return;
+                }
+
+                cursorY++;
+                // if cursor moves at empty space downside
+                if (cursorX >= Line.Length) {
+                    cursorX = Line.Length;
+                }
+
+                break;
+            }
             }
         }
 
-        public void SetCursor(int x, int y) {
-            CursorX = x;
-            CursorY = y;
-        }
-
-        public void MoveToNextLineStart() {
-            CursorY++;
-            if (CursorY == lines.Count) {
+        private void MoveToNextLineStart() {
+            cursorY++;
+            if (cursorY == lines.Count) {
                 try {
                     ClearLine();
                 }
@@ -367,7 +372,8 @@ namespace ConsoleExtensions {
                     PrintBlame(ex);
                 }
             }
-            CursorX = 0;
+
+            cursorX = 0;
         }
 
         #endregion

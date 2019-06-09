@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Drawing;
 
-namespace ConsoleExtensions {
+namespace CodeConsole {
     /// <summary>
-    ///     Extension methods for [<see cref="Console" />] class,
+    ///     Extension methods for [console] class,
     ///     to simplify console interaction.
     /// </summary>
     public static class ConsoleUI {
@@ -28,18 +28,6 @@ namespace ConsoleExtensions {
             Console.CursorLeft = fromX;
         }
 
-        #region Simple logging functions (just highlighting)
-
-        public static void LogInfo(string message) {
-            WriteLine((message, ConsoleColor.DarkCyan));
-        }
-
-        public static void LogError(string message) {
-            WriteLine(($"Error: {message}", ConsoleColor.Red));
-        }
-
-        #endregion
-
         #region Basic write functions
 
         /// <summary>
@@ -55,8 +43,10 @@ namespace ConsoleExtensions {
         ///     Writes colored messages to the standard output stream.
         /// </summary>
         public static void Write(params (string text, ConsoleColor color)[] messages) {
-            for (var i = 0; i < messages.Length; i++) {
-                // ReSharper disable once AccessToModifiedClosure
+            for (var i = 0;
+                i < messages.Length;
+                i++) // ReSharper disable once AccessToModifiedClosure
+            {
                 WithFontColor(messages[i].color, () => Console.Write(messages[i].text));
             }
         }
@@ -77,6 +67,7 @@ namespace ConsoleExtensions {
                     Console.WriteLine(messages[i]);
                     return;
                 }
+
                 Console.Write(messages[i]);
             }
         }
@@ -90,6 +81,7 @@ namespace ConsoleExtensions {
                     WithFontColor(messages[i].color, () => Console.WriteLine(messages[i].text));
                     return;
                 }
+
                 // ReSharper disable once AccessToModifiedClosure
                 WithFontColor(messages[i].color, () => Console.Write(messages[i].text));
             }
@@ -100,8 +92,8 @@ namespace ConsoleExtensions {
         #region Helpers
 
         /// <summary>
-        ///     Performs action in <see cref="Console" />, then returns
-        ///     back to previous cursor position in <see cref="Console" />.
+        ///     Performs action in console, then returns
+        ///     back to previous cursor position in console.
         /// </summary>
         public static void WithCurrentPosition(Action action) {
             // save position
@@ -114,9 +106,9 @@ namespace ConsoleExtensions {
         }
 
         /// <summary>
-        ///     Moves to specified <see cref="Console" /> position,
+        ///     Moves to specified console position,
         ///     performs action, then returns back to previous
-        ///     cursor position in <see cref="Console" />.
+        ///     cursor position in console.
         /// </summary>
         public static void WithPosition(Point position, Action action) {
             // save position
@@ -131,9 +123,9 @@ namespace ConsoleExtensions {
         }
 
         /// <summary>
-        ///     Moves to specified <see cref="Console" /> position,
+        ///     Moves to specified console position,
         ///     performs action, then returns back to previous
-        ///     cursor position in <see cref="Console" />.
+        ///     cursor position in console.
         /// </summary>
         public static void WithPosition(int x, int y, Action action) {
             // save position

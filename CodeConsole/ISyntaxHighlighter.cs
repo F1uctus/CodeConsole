@@ -3,14 +3,12 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 
-namespace ConsoleExtensions {
+namespace CodeConsole {
     public interface ISyntaxHighlighter {
-        ConsoleCodeEditor Editor { set; }
-
         List<ColoredValue> Highlight(
-            IEnumerable<string> codeLines,
-            out Point           lastRenderEndPosition,
-            List<Exception>     blames
+            List<string>        codeLines,
+            ref Point           lastRenderEndPosition,
+            out List<Exception> blames
         );
     }
 
@@ -23,7 +21,7 @@ namespace ConsoleExtensions {
             Color = color;
         }
 
-        public string Value { get; private set; }
+        public string Value { get; set; }
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private string debuggerDisplay =>
