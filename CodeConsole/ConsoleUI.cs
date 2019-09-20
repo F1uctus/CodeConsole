@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
+using CodeConsole.CodeEditor;
 
 namespace CodeConsole {
     /// <summary>
@@ -12,8 +14,8 @@ namespace CodeConsole {
             WithFontColor(
                 fontColor,
                 () => {
-                    var editor = new ConsoleCodeEditor(true, prompt: prompt);
-                    result = editor.RunSession()[0];
+                    var editor = new CliEditor(new CliEditorSettings(true, prompt: prompt));
+                    result = editor.Run()[0];
                 }
             );
             return result;
@@ -88,6 +90,32 @@ namespace CodeConsole {
         }
 
         #endregion
+
+        public static void Write(string code, ISyntaxHighlighter highlighter) {
+            List<ColoredValue> values = highlighter.Highlight(code);
+            ClearLine();
+            foreach (ColoredValue value in values) {
+                Console.ForegroundColor = value.Color;
+                if (value.Value.Contains("\n")) {
+                    string[] valueLines = value.Value.Split('\n');
+                    for (var j = 0; j < valueLines.Length - 1; j++) {
+                        Console.WriteLine(valueLines[j]);
+                    }
+
+                    Console.Write(valueLines[valueLines.Length - 1]);
+                    continue;
+                }
+
+                Console.Write(value.Value);
+            }
+        
+            Console.ForegroundColor = ConsoleColor.White;
+        }
+
+        public static void WriteLine(string code, ISyntaxHighlighter highlighter) {
+            Write(code, highlighter);
+            WriteLine();
+        }
 
         #region Helpers
 

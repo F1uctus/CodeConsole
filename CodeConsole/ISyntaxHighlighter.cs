@@ -10,6 +10,8 @@ namespace CodeConsole {
             ref Point           lastRenderEndPosition,
             out List<Exception> blames
         );
+
+        List<ColoredValue> Highlight(string code);
     }
 
     [DebuggerDisplay("{" + nameof(debuggerDisplay) + ",nq}")]
@@ -26,9 +28,5 @@ namespace CodeConsole {
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private string debuggerDisplay =>
             $"{Color:G}: '{Value.Replace("\r", "\\r").Replace("\n", "\\n").Replace("\t", "\\t")}'";
-
-        public void AppendValue(string value) {
-            Value += value;
-        }
     }
 }
