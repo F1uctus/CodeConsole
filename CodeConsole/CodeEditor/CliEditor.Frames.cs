@@ -4,11 +4,11 @@ using static CodeConsole.ConsoleUI;
 namespace CodeConsole.CodeEditor {
     public partial class CliEditor {
         private void DrawTopFrame() {
-            Console.WriteLine("Press [Esc] twice to exit code editor");
+            Console.WriteLine("Press [Esc]x2 to exit, [F1] to copy.");
             if (settings.SyntaxHighlighting) {
                 // draw header frame
                 Write(
-                    ("┌─────" + new string('─', Console.BufferWidth - editBoxPoint.X) + "\n" + "| ",
+                    ("┌─────" + new string('─', Console.BufferWidth - editBoxPoint.X) + "\n" + "│ ",
                      CliEditorSettings.FramesColor)
                 );
                 // mark position of header
@@ -16,8 +16,7 @@ namespace CodeConsole.CodeEditor {
                 headerPoint.Y = Console.CursorTop;
                 // draw editor frame
                 WriteLine(
-                    (CliEditorSettings.DefaultHeader + "\n" +
-                    "└────┬" + new string('─', Console.BufferWidth - editBoxPoint.X),
+                    (CliEditorSettings.DefaultHeader + "\n" + "└────┬" + new string('─', Console.BufferWidth - editBoxPoint.X),
                      CliEditorSettings.FramesColor)
                 );
             }
@@ -53,7 +52,8 @@ namespace CodeConsole.CodeEditor {
         private void DrawCurrentLineNumber() {
             DrawLineNumber(cursorY + 1);
 
-            if (settings.SyntaxHighlighting && lines.Count > CliEditorSettings.MaxHighlightedLinesCount) {
+            if (settings.SyntaxHighlighting
+             && lines.Count > CliEditorSettings.MaxHighlightedLinesCount) {
                 throw new FileTooLargeException();
             }
         }
@@ -80,7 +80,7 @@ namespace CodeConsole.CodeEditor {
             }
 
             // append line number and right aligner
-            view += lineNumber + " | ";
+            view += lineNumber + " │ ";
             Write((view, CliEditorSettings.FramesColor));
         }
     }

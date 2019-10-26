@@ -70,7 +70,7 @@ namespace CodeConsole.CodeEditor {
                 : prompt != null
                     ? throw new ArgumentException()
                     : "";
-            ReadOnly = readOnly;
+            ReadOnly    = readOnly;
             Tabulation  = new string(' ', 4);
             Highlighter = highlighter;
         }

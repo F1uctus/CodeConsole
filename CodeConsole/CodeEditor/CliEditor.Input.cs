@@ -1,4 +1,5 @@
 using System;
+using TextCopy;
 
 namespace CodeConsole.CodeEditor {
     public partial class CliEditor {
@@ -22,7 +23,7 @@ namespace CodeConsole.CodeEditor {
             get => Console.CursorTop - editBoxPoint.Y;
             set => Console.CursorTop = value + editBoxPoint.Y;
         }
-        
+
         private void MoveToNextLineStart() {
             cursorY++;
             if (cursorY == lines.Count) {
@@ -36,7 +37,7 @@ namespace CodeConsole.CodeEditor {
 
             cursorX = 0;
         }
-        
+
         private bool HandleEditAction(ConsoleKeyInfo key) {
             switch (key.Key) {
             case ConsoleKey.Escape: {
@@ -75,7 +76,7 @@ namespace CodeConsole.CodeEditor {
             case ConsoleKey.Tab: {
                 // Shift + Tab: outdent current tab
                 if (key.Modifiers == ConsoleModifiers.Shift
-                    && Line.StartsWith(settings.Tabulation)) {
+                 && Line.StartsWith(settings.Tabulation)) {
                     Line = Line.Remove(0, settings.Tabulation.Length);
                 }
                 // if on the left side of cursor there are only whitespaces
@@ -95,8 +96,11 @@ namespace CodeConsole.CodeEditor {
                 break;
             }
 
+            case ConsoleKey.F1: {
+                Clipboard.SetText(string.Join("\n", lines));
+                break;
+            }
             // TODO (UI) add something for FN keys
-            case ConsoleKey.F1:
             case ConsoleKey.F2:
             case ConsoleKey.F3:
             case ConsoleKey.F4:
@@ -186,8 +190,7 @@ namespace CodeConsole.CodeEditor {
 
             return isViewFunction;
         }
-        
-        
+
         /// <summary>
         ///     Moves cursor in edit box to specified <see cref="direction" />.
         /// </summary>
@@ -197,8 +200,8 @@ namespace CodeConsole.CodeEditor {
             switch (direction) {
             case ConsoleKey.LeftArrow: {
                 // if reach first line start
-                if (cursorY == 0
-                    && cursorX - count < 0) {
+                if (cursorY         == 0
+                 && cursorX - count < 0) {
                     return;
                 }
 
@@ -218,7 +221,7 @@ namespace CodeConsole.CodeEditor {
             case ConsoleKey.RightArrow: {
                 // if reach last line end
                 if (cursorY == lines.Count - 1
-                    && cursorX + count > Line.Length) {
+                 && cursorX                + count > Line.Length) {
                     return;
                 }
 

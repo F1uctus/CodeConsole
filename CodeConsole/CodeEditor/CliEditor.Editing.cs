@@ -128,7 +128,7 @@ namespace CodeConsole.CodeEditor {
 
             cursorX++;
         }
-        
+
         private void ClearLines(int fromX, int fromY) {
             ConsoleUI.WithCurrentPosition(
                 () => {

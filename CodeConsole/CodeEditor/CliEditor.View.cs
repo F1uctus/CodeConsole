@@ -5,9 +5,7 @@ using System.Drawing;
 namespace CodeConsole.CodeEditor {
     public partial class CliEditor {
         private static List<Exception> blames;
-        private        int             lastRenderLinesCount;
-        private        Point           newRenderStartPosition;
-        
+
         /// <summary>
         ///     Editor area top-left position in console.
         /// </summary>
@@ -19,6 +17,9 @@ namespace CodeConsole.CodeEditor {
         ///     and in multiline mode).
         /// </summary>
         private Point headerPoint;
+
+        private int   lastRenderLinesCount;
+        private Point newRenderStartPosition;
 
         private string EditorHeader {
             set {

@@ -9,6 +9,21 @@ namespace CodeConsole {
     ///     to simplify console interaction.
     /// </summary>
     public static class ConsoleUI {
+        /// <summary>
+        ///     Prompts user to write something to console.
+        ///     Returns string written by user.
+        ///     Uses standard ReadLine function.
+        /// </summary>
+        public static string ReadSimple(string prompt) {
+            Console.Write(prompt);
+            return Console.ReadLine();
+        }
+
+        /// <summary>
+        ///     Prompts user to write something to console.
+        ///     Returns string written by user.
+        ///     Uses console code editor as backend.
+        /// </summary>
         public static string Read(string prompt, ConsoleColor fontColor = ConsoleColor.White) {
             var result = "";
             WithFontColor(
@@ -24,10 +39,39 @@ namespace CodeConsole {
         /// <summary>
         ///     Clears current line.
         /// </summary>
-        public static void ClearLine(int fromX = 0) {
+        public static void ClearLine(int fromX = 0, int length = -1) {
+            if (length < 0) {
+                length = Console.BufferWidth - fromX - 1;
+            }
             Console.CursorLeft = fromX;
-            Console.Write(new string(' ', Console.BufferWidth - fromX - 1));
+            Console.Write(new string(' ', length));
             Console.CursorLeft = fromX;
+        }
+
+        public static void Write(string code, ISyntaxHighlighter highlighter) {
+            List<ColoredValue> values = highlighter.Highlight(code);
+            ClearLine();
+            foreach (ColoredValue value in values) {
+                Console.ForegroundColor = value.Color;
+                if (value.Value.Contains("\n")) {
+                    string[] valueLines = value.Value.Split('\n');
+                    for (var j = 0; j < valueLines.Length - 1; j++) {
+                        Console.WriteLine(valueLines[j]);
+                    }
+
+                    Console.Write(valueLines[valueLines.Length - 1]);
+                    continue;
+                }
+
+                Console.Write(value.Value);
+            }
+
+            Console.ForegroundColor = ConsoleColor.White;
+        }
+
+        public static void WriteLine(string code, ISyntaxHighlighter highlighter) {
+            Write(code, highlighter);
+            WriteLine();
         }
 
         #region Basic write functions
@@ -46,8 +90,8 @@ namespace CodeConsole {
         /// </summary>
         public static void Write(params (string text, ConsoleColor color)[] messages) {
             for (var i = 0;
-                i < messages.Length;
-                i++) // ReSharper disable once AccessToModifiedClosure
+                 i < messages.Length;
+                 i++) // ReSharper disable once AccessToModifiedClosure
             {
                 WithFontColor(messages[i].color, () => Console.Write(messages[i].text));
             }
@@ -90,32 +134,6 @@ namespace CodeConsole {
         }
 
         #endregion
-
-        public static void Write(string code, ISyntaxHighlighter highlighter) {
-            List<ColoredValue> values = highlighter.Highlight(code);
-            ClearLine();
-            foreach (ColoredValue value in values) {
-                Console.ForegroundColor = value.Color;
-                if (value.Value.Contains("\n")) {
-                    string[] valueLines = value.Value.Split('\n');
-                    for (var j = 0; j < valueLines.Length - 1; j++) {
-                        Console.WriteLine(valueLines[j]);
-                    }
-
-                    Console.Write(valueLines[valueLines.Length - 1]);
-                    continue;
-                }
-
-                Console.Write(value.Value);
-            }
-        
-            Console.ForegroundColor = ConsoleColor.White;
-        }
-
-        public static void WriteLine(string code, ISyntaxHighlighter highlighter) {
-            Write(code, highlighter);
-            WriteLine();
-        }
 
         #region Helpers
 
