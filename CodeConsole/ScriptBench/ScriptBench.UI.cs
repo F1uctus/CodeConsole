@@ -53,7 +53,7 @@ namespace CodeConsole.ScriptBench {
             const string name = "ScriptBench";
             Console.Write(" ");
             // upper caps
-            for (int i = 0; i < name.Length; i++) {
+            for (var i = 0; i < name.Length; i++) {
                 Write(("┌───┐ ", ConsoleColor.DarkGray));
             }
             Console.WriteLine();
@@ -67,7 +67,7 @@ namespace CodeConsole.ScriptBench {
             Console.WriteLine();
             Console.Write(" ");
             // lower caps
-            for (int i = 0; i < name.Length; i++) {
+            for (var i = 0; i < name.Length; i++) {
                 Write(("└───┘ ", ConsoleColor.DarkGray));
             }
             Console.WriteLine();

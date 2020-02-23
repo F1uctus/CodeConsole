@@ -10,7 +10,7 @@ namespace CodeConsole {
     /// </summary>
     public static class ConsoleUtils {
         private static readonly Random rnd = new Random();
-        
+
         /// <summary>
         ///     Prompts user to write something to console.
         ///     Returns string written by user.
@@ -216,7 +216,7 @@ namespace CodeConsole {
         }
 
         private static ConsoleColor GetRandomColor() {
-            string[] colorNames = Enum.GetNames(typeof(ConsoleColor));
+            string[]     colorNames = Enum.GetNames(typeof(ConsoleColor));
             ConsoleColor result;
             do {
                 result = (ConsoleColor) Enum.Parse(typeof(ConsoleColor), colorNames[rnd.Next(colorNames.Length)]);

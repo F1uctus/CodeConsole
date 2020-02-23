@@ -81,7 +81,7 @@ namespace CodeConsole.ScriptBench {
                 ConsoleUtils.ClearLine();
                 Console.Write(settings.Prompt);
             }
-            
+
             // mark editor's edit box coordinates
             if (settings.SingleLineMode && settings.Prompt.Length > 0) {
                 editBoxPoint.X = settings.Prompt.Length;
@@ -91,7 +91,7 @@ namespace CodeConsole.ScriptBench {
             }
 
             DrawTopFrame();
-            
+
             editBoxPoint.Y = Console.CursorTop;
 
             cursorX = Line.Length;
