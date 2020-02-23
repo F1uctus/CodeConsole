@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Web;
 
 namespace CodeConsole {
     public interface ISyntaxHighlighter {
@@ -16,17 +17,16 @@ namespace CodeConsole {
 
     [DebuggerDisplay("{" + nameof(debuggerDisplay) + ",nq}")]
     public class ColoredValue {
-        public readonly ConsoleColor Color;
+        public ConsoleColor Color { get; }
+        public string       Value { get; set; }
 
         public ColoredValue(string value, ConsoleColor color) {
             Value = value;
             Color = color;
         }
 
-        public string Value { get; set; }
-
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private string debuggerDisplay =>
-            $"{Color:G}: '{Value.Replace("\r", "\\r").Replace("\n", "\\n").Replace("\t", "\\t")}'";
+            $"{Color:G}: '{HttpUtility.JavaScriptStringEncode(Value)}'";
     }
 }

@@ -1,7 +1,11 @@
 using System;
 
-namespace CodeConsole.CodeEditor {
-    public partial class CliEditor {
+namespace CodeConsole.ScriptBench {
+    public partial class ScriptBench {
+        // This part contains complex editing logic.
+        // IDK now, how it works, but it means not everything works
+        // as expected, at the moment as you came here to fix it.
+
         /// <summary>
         ///     Splits line at cursor position into 2 lines.
         /// </summary>
@@ -77,7 +81,7 @@ namespace CodeConsole.CodeEditor {
             }
 
             // cursor doesn't move when removing right character
-            ConsoleUI.WithCurrentPosition(
+            ConsoleUtils.WithCurrentPosition(
                 () => {
                     if (cursorX == Line.Length) {
                         // remove current line
@@ -120,17 +124,22 @@ namespace CodeConsole.CodeEditor {
                 Line = Line.Insert(cursorX, value.ToString());
             }
             else {
+                // actually, this should never happen ;)
                 throw new ArgumentOutOfRangeException(
                     nameof(cursorX),
-                    "cursor went through end of line."
+                    "Cursor somehow went through end of line. Deal with it by yourself."
                 );
             }
 
             cursorX++;
         }
 
+        /// <summary>
+        ///     Clears every line in editor
+        ///     starting with specified coordinates.
+        /// </summary>
         private void ClearLines(int fromX, int fromY) {
-            ConsoleUI.WithCurrentPosition(
+            ConsoleUtils.WithCurrentPosition(
                 () => {
                     cursorY = fromY;
                     ClearLine(false, fromX);
@@ -147,15 +156,14 @@ namespace CodeConsole.CodeEditor {
         /// </summary>
         private void ClearLine(bool fullClear = false, int fromRelativeX = 0) {
             if (fullClear) {
-                ConsoleUI.ClearLine();
-            }
-            else if (settings.SingleLineMode) {
-                ConsoleUI.ClearLine(settings.Prompt.Length + fromRelativeX);
+                ConsoleUtils.ClearLine();
             }
             else {
-                Console.CursorLeft = 0;
-                DrawCurrentLineNumber();
-                ConsoleUI.ClearLine(CliEditorSettings.LineNumberWidth + fromRelativeX);
+                if (!settings.SingleLineMode) {
+                    Console.CursorLeft = 0;
+                    DrawCurrentLineNumber();
+                }
+                ConsoleUtils.ClearLine(editBoxPoint.X + fromRelativeX);
             }
         }
     }

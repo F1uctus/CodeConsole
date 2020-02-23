@@ -11,6 +11,7 @@
         <Description>Extensions for .NET Console.</Description>
         <RootNamespace>CodeConsole</RootNamespace>
         <Nullable>disable</Nullable>
+        <PackageVersion>1.2.0</PackageVersion>
     </PropertyGroup>
 
     <ItemGroup>

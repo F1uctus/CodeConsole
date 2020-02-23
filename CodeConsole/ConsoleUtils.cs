@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using CodeConsole.CodeEditor;
+using CodeConsole.ScriptBench;
 
 namespace CodeConsole {
     /// <summary>
-    ///     Extension methods for [console] class,
+    ///     Extension methods for <see cref="Console"/> class,
     ///     to simplify console interaction.
     /// </summary>
-    public static class ConsoleUI {
+    public static class ConsoleUtils {
         /// <summary>
         ///     Prompts user to write something to console.
         ///     Returns string written by user.
@@ -29,7 +29,7 @@ namespace CodeConsole {
             WithFontColor(
                 fontColor,
                 () => {
-                    var editor = new CliEditor(new CliEditorSettings(true, prompt: prompt));
+                    var editor = new ScriptBench.ScriptBench(new ScriptBenchSettings(true, prompt));
                     result = editor.Run()[0];
                 }
             );
@@ -48,6 +48,9 @@ namespace CodeConsole {
             Console.CursorLeft = fromX;
         }
 
+        /// <summary>
+        ///     Writes specified value with highlighting to the console.
+        /// </summary>
         public static void Write(string code, ISyntaxHighlighter highlighter) {
             List<ColoredValue> values = highlighter.Highlight(code);
             ClearLine();
@@ -69,6 +72,9 @@ namespace CodeConsole {
             Console.ForegroundColor = ConsoleColor.White;
         }
 
+        /// <summary>
+        ///     See <see cref="Write(string,CodeConsole.ISyntaxHighlighter)"/>.
+        /// </summary>
         public static void WriteLine(string code, ISyntaxHighlighter highlighter) {
             Write(code, highlighter);
             WriteLine();
@@ -169,23 +175,6 @@ namespace CodeConsole {
         }
 
         /// <summary>
-        ///     Moves to specified console position,
-        ///     performs action, then returns back to previous
-        ///     cursor position in console.
-        /// </summary>
-        public static void WithPosition(int x, int y, Action action) {
-            // save position
-            int sX = Console.CursorLeft;
-            int sY = Console.CursorTop;
-            // move cursor
-            Console.SetCursorPosition(x, y);
-            // do action
-            action();
-            // reset cursor
-            Console.SetCursorPosition(sX, sY);
-        }
-
-        /// <summary>
         ///     Sets <see cref="Console.ForegroundColor" /> to &lt;<see cref="color" />&gt;,
         ///     performs action, then returns back to previously used color.
         /// </summary>
@@ -201,7 +190,7 @@ namespace CodeConsole {
         }
 
         /// <summary>
-        ///     Sets <see cref="Console.ForegroundColor" /> to &lt;<see cref="color" />&gt;,
+        ///     Sets <see cref="Console.BackgroundColor" /> to &lt;<see cref="color" />&gt;,
         ///     performs action, then returns back to previously used color.
         /// </summary>
         public static void WithBackColor(ConsoleColor color, Action action) {
