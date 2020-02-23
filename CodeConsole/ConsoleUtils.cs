@@ -9,6 +9,8 @@ namespace CodeConsole {
     ///     to simplify console interaction.
     /// </summary>
     public static class ConsoleUtils {
+        private static readonly Random rnd = new Random();
+        
         /// <summary>
         ///     Prompts user to write something to console.
         ///     Returns string written by user.
@@ -95,10 +97,8 @@ namespace CodeConsole {
         ///     Writes colored messages to the standard output stream.
         /// </summary>
         public static void Write(params (string text, ConsoleColor color)[] messages) {
-            for (var i = 0;
-                 i < messages.Length;
-                 i++) // ReSharper disable once AccessToModifiedClosure
-            {
+            for (var i = 0; i < messages.Length; i++) {
+                // ReSharper disable once AccessToModifiedClosure
                 WithFontColor(messages[i].color, () => Console.Write(messages[i].text));
             }
         }
@@ -142,6 +142,17 @@ namespace CodeConsole {
         #endregion
 
         #region Helpers
+
+        public static void WithRandomFontColor(Action action) {
+            // save color
+            ConsoleColor prevColor = Console.ForegroundColor;
+            // set new color
+            Console.ForegroundColor = GetRandomColor();
+            // do action
+            action();
+            // reset color
+            Console.ForegroundColor = prevColor;
+        }
 
         /// <summary>
         ///     Performs action in console, then returns
@@ -202,6 +213,15 @@ namespace CodeConsole {
             action();
             // reset color
             Console.BackgroundColor = prevColor;
+        }
+
+        private static ConsoleColor GetRandomColor() {
+            string[] colorNames = Enum.GetNames(typeof(ConsoleColor));
+            ConsoleColor result;
+            do {
+                result = (ConsoleColor) Enum.Parse(typeof(ConsoleColor), colorNames[rnd.Next(colorNames.Length)]);
+            } while (result == ConsoleColor.Black);
+            return result;
         }
 
         #endregion

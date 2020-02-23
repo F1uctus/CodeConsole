@@ -50,26 +50,83 @@ namespace CodeConsole.ScriptBench {
         /// </summary>
         private void DrawHelpBox() {
             Console.CursorLeft = 0;
-            Console.WriteLine(
-                string.Join(
-                    Environment.NewLine,
-                    "┌───┐ ┌───┐ ┌───┐ ┌───┐ ┌───┐ ┌───┐ ┌───┐ ┌───┐ ┌───┐ ┌───┐ ┌───┐",
-                    "│ S │ │ c │ │ r │ │ i │ │ p │ │ t │ │ B │ │ e │ │ n │ │ c │ │ h │",
-                    "└───┘ └───┘ └───┘ └───┘ └───┘ └───┘ └───┘ └───┘ └───┘ └───┘ └───┘",
-                    "┌─────────────────────────────────────────────────────────────────┐",
-                    "│      ScriptBench - the best code editor for 19th century ;)     │",
-                    "├─────────────────────────────────────────────────────────────────┤",
-                    "│ Hotkey            Description                                   │",
-                    "├─────────────────┬───────────────────────────────────────────────┤",
-                    "│ [Esc] + [Esc]   │ Exit (it's just [Enter] in single-line mode.) │",
-                    "│ [F1]            │ Copy all text                                 │",
-                    "│ [F2]            │ Paste (Regular Ctrl-V works, but it's         │",
-                    "│                 │     much slower because of implementation)    │",
-                    "│ [Tab]           │ Insert 4 spaces to the line start.            │",
-                    "│ [Shift] + [Tab] │ Remove 4 spaces from the line start.          │",
-                    "└─────────────────┴───────────────────────────────────────────────┘"
-                )
+            const string name = "ScriptBench";
+            Console.Write(" ");
+            // upper caps
+            for (int i = 0; i < name.Length; i++) {
+                Write(("┌───┐ ", ConsoleColor.DarkGray));
+            }
+            Console.WriteLine();
+            Console.Write(" ");
+            // letters
+            foreach (char c in name) {
+                Write(("│ ", ConsoleColor.DarkGray));
+                WithRandomFontColor(() => { Console.Write(c); });
+                Write((" │ ", ConsoleColor.DarkGray));
+            }
+            Console.WriteLine();
+            Console.Write(" ");
+            // lower caps
+            for (int i = 0; i < name.Length; i++) {
+                Write(("└───┘ ", ConsoleColor.DarkGray));
+            }
+            Console.WriteLine();
+            WriteLine(("┌─────────────────────────────────────────────────────────────────┐", ConsoleColor.DarkGray));
+            WriteLine(
+                ("│", ConsoleColor.DarkGray),
+                ("      ScriptBench - the best code editor for 19th century ;)     ", ConsoleColor.White),
+                ("│", ConsoleColor.DarkGray)
             );
+            WriteLine(("├─────────────────────────────────────────────────────────────────┤", ConsoleColor.DarkGray));
+            WriteLine(
+                ("│", ConsoleColor.DarkGray),
+                (" Hotkey            Description                                   ", ConsoleColor.White),
+                ("│", ConsoleColor.DarkGray)
+            );
+            WriteLine(("├─────────────────┬───────────────────────────────────────────────┤", ConsoleColor.DarkGray));
+            WriteLine(
+                ("│", ConsoleColor.DarkGray),
+                (" [Esc] + [Esc]   ", ConsoleColor.White),
+                ("│", ConsoleColor.DarkGray),
+                (" Exit (it's just [Enter] in single-line mode.) ", ConsoleColor.White),
+                ("│", ConsoleColor.DarkGray)
+            );
+            WriteLine(
+                ("│", ConsoleColor.DarkGray),
+                (" [F1]            ", ConsoleColor.White),
+                ("│", ConsoleColor.DarkGray),
+                (" Copy all text                                 ", ConsoleColor.White),
+                ("│", ConsoleColor.DarkGray)
+            );
+            WriteLine(
+                ("│", ConsoleColor.DarkGray),
+                (" [F2]            ", ConsoleColor.White),
+                ("│", ConsoleColor.DarkGray),
+                (" Paste (Regular Ctrl-V works, but it's         ", ConsoleColor.White),
+                ("│", ConsoleColor.DarkGray)
+            );
+            WriteLine(
+                ("│", ConsoleColor.DarkGray),
+                ("                 ", ConsoleColor.White),
+                ("│", ConsoleColor.DarkGray),
+                ("     much slower because of implementation)    ", ConsoleColor.White),
+                ("│", ConsoleColor.DarkGray)
+            );
+            WriteLine(
+                ("│", ConsoleColor.DarkGray),
+                (" [Tab]           ", ConsoleColor.White),
+                ("│", ConsoleColor.DarkGray),
+                (" Insert 4 spaces to the line start.            ", ConsoleColor.White),
+                ("│", ConsoleColor.DarkGray)
+            );
+            WriteLine(
+                ("│", ConsoleColor.DarkGray),
+                (" [Shift] + [Tab] ", ConsoleColor.White),
+                ("│", ConsoleColor.DarkGray),
+                (" Remove 4 spaces from the line start.          ", ConsoleColor.White),
+                ("│", ConsoleColor.DarkGray)
+            );
+            WriteLine(("└─────────────────┴───────────────────────────────────────────────┘", ConsoleColor.DarkGray));
         }
 
         /// <summary>
