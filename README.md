@@ -9,3 +9,7 @@ This includes:
 
 Here it is, working as a part of Axion toolset:
 ![ScriptBench](/showoff.png)
+
+### Caveats
+
+ScriptBench doesn't support console resizing for now, it'll crash if you reduce console size while editing.
