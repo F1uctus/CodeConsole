@@ -5,11 +5,11 @@ using System.Drawing;
 using System.Web;
 
 namespace CodeConsole {
-    public interface ISyntaxHighlighter {
+    public interface IScriptBenchSyntaxHighlighter {
         List<ColoredValue> Highlight(
-            List<string>        codeLines,
-            ref Point           lastRenderEndPosition,
-            out List<Exception> blames
+            IEnumerable<string>          codeLines,
+            ref Point                    lastRenderEndPosition,
+            out IReadOnlyList<Exception> blames
         );
 
         List<ColoredValue> Highlight(string code);
@@ -17,12 +17,14 @@ namespace CodeConsole {
 
     [DebuggerDisplay("{" + nameof(debuggerDisplay) + ",nq}")]
     public class ColoredValue {
-        public ConsoleColor Color { get; }
-        public string       Value { get; set; }
+        public ConsoleColor Color   { get; }
+        public string       Value   { get; set; }
+        public bool         IsWhite { get; }
 
-        public ColoredValue(string value, ConsoleColor color) {
-            Value = value;
-            Color = color;
+        public ColoredValue(string value, ConsoleColor color, bool isWhite = false) {
+            Value   = value;
+            Color   = color;
+            IsWhite = isWhite;
         }
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]

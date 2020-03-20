@@ -1,18 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using static CodeConsole.ConsoleUtils;
 
 namespace CodeConsole.ScriptBench {
     public partial class ScriptBench {
-        // ┌ ┐ └ ┘ ├ ┤ ┬ ┴ ┼ ─ │
-
-        /// <summary>
-        ///     (X, Y) position of editor's header.
-        ///     (works only with syntax highlighting
-        ///     and in multiline mode).
-        /// </summary>
-        private Point headerPoint;
-
         /// <summary>
         ///     Editor's area top-left position in console.
         /// </summary>
@@ -23,32 +15,15 @@ namespace CodeConsole.ScriptBench {
         ///     Assigning it to null will write default header message.
         /// </summary>
         private string EditorHeader {
-            set {
-                WithPosition(
-                    headerPoint,
-                    () => {
-                        ConsoleUtils.ClearLine(2);
-                        if (string.IsNullOrWhiteSpace(value)) {
-                            Console.Write(ScriptBenchSettings.DefaultHeader);
-                        }
-                        else {
-                            Write(
-                                (value,
-                                 value.ToUpper().StartsWith("ERROR")
-                                     ? ConsoleColor.Red
-                                     : ConsoleColor.Yellow)
-                            );
-                        }
-                    }
-                );
-            }
+            set => Console.Title =
+                "ScriptBench v." + Version + ": " + (string.IsNullOrWhiteSpace(value) ? settings.DefaultHeader : value);
         }
 
         /// <summary>
         ///     Draws box with help on current line start.
         ///     Don't invoke it during normal editing workflow.
         /// </summary>
-        private void DrawHelpBox() {
+        public static void DrawHelpBox() {
             Console.CursorLeft = 0;
             const string name = "ScriptBench";
             Console.Write(" ");
@@ -88,7 +63,7 @@ namespace CodeConsole.ScriptBench {
                 ("│", ConsoleColor.DarkGray),
                 (" [Esc] + [Esc]   ", ConsoleColor.White),
                 ("│", ConsoleColor.DarkGray),
-                (" Exit (it's just [Enter] in single-line mode.) ", ConsoleColor.White),
+                (" Exit ([Enter] in single-line mode.)           ", ConsoleColor.White),
                 ("│", ConsoleColor.DarkGray)
             );
             WriteLine(
@@ -114,6 +89,13 @@ namespace CodeConsole.ScriptBench {
             );
             WriteLine(
                 ("│", ConsoleColor.DarkGray),
+                (" [F3] + [F3]     ", ConsoleColor.White),
+                ("│", ConsoleColor.DarkGray),
+                (" Clear all code                                ", ConsoleColor.White),
+                ("│", ConsoleColor.DarkGray)
+            );
+            WriteLine(
+                ("│", ConsoleColor.DarkGray),
                 (" [Tab]           ", ConsoleColor.White),
                 ("│", ConsoleColor.DarkGray),
                 (" Insert 4 spaces to the line start.            ", ConsoleColor.White),
@@ -129,40 +111,60 @@ namespace CodeConsole.ScriptBench {
             WriteLine(("└─────────────────┴───────────────────────────────────────────────┘", ConsoleColor.DarkGray));
         }
 
+        private int lastWidthToEnsure;
+        private int lastHeightToEnsure;
+
+        /// <summary>
+        ///     Ensures that console has minimal defined width & height
+        ///     so editor could work without errors.
+        /// </summary>
+        public void EnsureWindowSize(int minW = 50, int minH = 30) {
+            if (Console.WindowWidth < minW) {
+                lastWidthToEnsure   = Math.Max(lastWidthToEnsure, minW);
+                Console.WindowWidth = lastWidthToEnsure;
+            }
+            if (Console.BufferHeight < minH) {
+                lastHeightToEnsure   = Math.Max(lines.Count + 10, Math.Max(lastHeightToEnsure, minW));
+                Console.BufferHeight = lastHeightToEnsure;
+            }
+        }
+
         /// <summary>
         ///     Draws editor's top frame on current line start.
         ///     This should be called only when editor is created.
         ///     This function does nothing in single-line mode.
         /// </summary>
         private void DrawTopFrame() {
-            if (settings.SingleLineMode) {
+            if (singleLineMode) {
                 return;
             }
 
             Console.CursorLeft = 0;
-            Console.WriteLine("[Esc]x2: exit, [F1]: copy, [F2]: paste.");
-            if (settings.SyntaxHighlighting) {
-                // draw header frame
+            WriteLine(
+                (settings.DrawingChars.DownRight + new string(settings.DrawingChars.Horizontal, Console.BufferWidth - 2),
+                 settings.MainColor)
+            );
+            Write((settings.DrawingChars.Vertical + " ", settings.MainColor));
+            var keys = new Dictionary<string, string> {
+                { "[Esc]x2", "exit" }, { "[F1]", "copy" }, { "[F2]", "paste" }, { "[F3]x2", "clear all" }
+            };
+            foreach (KeyValuePair<string, string> key in keys) {
                 Write(
-                    ("┌──────" + new string('─', Console.BufferWidth - editBoxPoint.X) + "\n" + "│ ",
-                     ScriptBenchSettings.FramesColor)
-                );
-                // mark position of header
-                headerPoint.X = Console.CursorLeft;
-                headerPoint.Y = Console.CursorTop;
-                // draw editor frame
-                WriteLine(
-                    (ScriptBenchSettings.DefaultHeader + "\n" + "└─────┬" + new string('─', Console.BufferWidth - editBoxPoint.X),
-                     ScriptBenchSettings.FramesColor)
+                    (key.Key, settings.AccentColor),
+                    (" ", ConsoleColor.White),
+                    (key.Value, ConsoleColor.Gray),
+                    ("   ", ConsoleColor.White)
                 );
             }
-            else {
-                // else draw upper bound
-                WriteLine(
-                    ("──────┬" + new string('─', Console.BufferWidth - editBoxPoint.X),
-                     ScriptBenchSettings.FramesColor)
-                );
-            }
+            WriteLine();
+            // draw upper bound
+            string prefix = settings.DrawingChars.UpRight
+                          + new string(settings.DrawingChars.Horizontal, 5)
+                          + settings.DrawingChars.HorizontalDown;
+            WriteLine(
+                (prefix + new string(settings.DrawingChars.Horizontal, Console.BufferWidth - prefix.Length - 1),
+                 settings.MainColor)
+            );
         }
 
         /// <summary>
@@ -171,17 +173,18 @@ namespace CodeConsole.ScriptBench {
         ///     This function does nothing in single-line mode.
         /// </summary>
         private void DrawBottomFrame() {
-            if (settings.SingleLineMode) {
+            if (singleLineMode) {
                 return;
             }
 
-            // move to editor lower bound and
-            // render bottom frame
+            // move to editor lower bound
             cursorY            = lines.Count;
             Console.CursorLeft = 0;
+            // render lower bound
+            string prefix = new string(settings.DrawingChars.Horizontal, 6) + settings.DrawingChars.HorizontalUp;
             WriteLine(
-                ("──────┴" + new string('─', Console.BufferWidth - editBoxPoint.X),
-                 ScriptBenchSettings.FramesColor)
+                (prefix + new string(settings.DrawingChars.Horizontal, Console.BufferWidth - prefix.Length - 1),
+                 settings.MainColor)
             );
         }
 
@@ -198,14 +201,15 @@ namespace CodeConsole.ScriptBench {
         ///         Format: ` XXXX | `
         ///     </c>
         /// </summary>
-        public static void DrawLineNumber(int lineNumber) {
+        private void DrawLineNumber(int lineNumber) {
             var strNum = lineNumber.ToString();
             int width  = Math.Max(strNum.Length, 4);
             string view =
                 strNum.PadLeft(width  + 1)
                       .PadRight(width + 2)
-              + "│ ";
-            Write((view, ScriptBenchSettings.FramesColor));
+              + settings.DrawingChars.Vertical
+              + " ";
+            Write((view, settings.MainColor));
         }
     }
 }

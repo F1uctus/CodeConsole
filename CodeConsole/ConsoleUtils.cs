@@ -31,7 +31,7 @@ namespace CodeConsole {
             WithFontColor(
                 fontColor,
                 () => {
-                    var editor = new ScriptBench.ScriptBench(new ScriptBenchSettings(true, prompt));
+                    var editor = new ScriptBench.ScriptBench(new ScriptBenchSettings(prompt), singleLineMode: true);
                     result = editor.Run()[0];
                 }
             );
@@ -53,7 +53,7 @@ namespace CodeConsole {
         /// <summary>
         ///     Writes specified value with highlighting to the console.
         /// </summary>
-        public static void Write(string code, ISyntaxHighlighter highlighter) {
+        public static void Write(string code, IScriptBenchSyntaxHighlighter highlighter) {
             List<ColoredValue> values = highlighter.Highlight(code);
             ClearLine();
             foreach (ColoredValue value in values) {
@@ -64,7 +64,7 @@ namespace CodeConsole {
                         Console.WriteLine(valueLines[j]);
                     }
 
-                    Console.Write(valueLines[valueLines.Length - 1]);
+                    Console.Write(valueLines[^1]);
                     continue;
                 }
 
@@ -75,9 +75,9 @@ namespace CodeConsole {
         }
 
         /// <summary>
-        ///     See <see cref="Write(string,CodeConsole.ISyntaxHighlighter)"/>.
+        ///     See <see cref="Write(string,IScriptBenchSyntaxHighlighter)"/>.
         /// </summary>
-        public static void WriteLine(string code, ISyntaxHighlighter highlighter) {
+        public static void WriteLine(string code, IScriptBenchSyntaxHighlighter highlighter) {
             Write(code, highlighter);
             WriteLine();
         }

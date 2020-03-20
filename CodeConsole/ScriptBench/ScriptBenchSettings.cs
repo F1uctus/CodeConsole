@@ -1,56 +1,141 @@
 using System;
+using System.IO;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace CodeConsole.ScriptBench {
+    [JsonObject(MemberSerialization.OptIn)]
     public class ScriptBenchSettings {
+        public const string       DefaultConfigPath  = "ScriptBench.config.json";
+        public const ConsoleColor DefaultFramesColor = ConsoleColor.DarkGray;
+
         /// <summary>
         ///     Default text to be shown in editor's header.
         /// </summary>
-        internal const string DefaultHeader = "No errors found.";
+        [JsonProperty]
+        public string DefaultHeader = "No errors found.";
 
         /// <summary>
         ///     Console color for editor UI.
         /// </summary>
-        internal const ConsoleColor FramesColor = ConsoleColor.DarkGray;
+        [JsonProperty]
+        public ConsoleColor MainColor = DefaultFramesColor;
 
         /// <summary>
-        ///     Current console highlighter.
+        ///     Console color for editor UI elements.
         /// </summary>
-        public readonly ISyntaxHighlighter Highlighter;
-
-        /// <summary>
-        ///     Highlight user input with specified <see cref="Highlighter" />.
-        ///     True if highlighter is not null.
-        /// </summary>
-        public bool SyntaxHighlighting => Highlighter != null;
+        [JsonProperty]
+        public ConsoleColor AccentColor = ConsoleColor.Magenta;
 
         /// <summary>
         ///     User prompt used in single-line mode.
         /// </summary>
-        public readonly string Prompt;
+        [JsonProperty]
+        public readonly string SingleLinePrompt;
 
         /// <summary>
         ///     Tab character used in editor.
         /// </summary>
-        internal readonly string Tabulation;
+        [JsonProperty]
+        public int TabSize;
 
         /// <summary>
-        ///     Use only 1 editable line.
+        ///     Tab character used in editor.
         /// </summary>
-        public readonly bool SingleLineMode;
+        public string Tabulation => new string(' ', TabSize);
+
+        /// <summary>
+        ///     If true, highlights leading whitespaces as unicode middle-dots.
+        /// </summary>
+        [JsonProperty]
+        public bool ShowWhitespaces;
+
+        [JsonProperty]
+        public BoxDrawingCharactersCollection DrawingChars = new BoxDrawingCharactersCollection();
 
         public ScriptBenchSettings(
-            bool               singleLineMode = false,
-            string             prompt         = null,
-            ISyntaxHighlighter highlighter    = null
+            string prompt = null
         ) {
-            SingleLineMode = singleLineMode;
-            Prompt = SingleLineMode
-                ? prompt ?? ""
-                : prompt != null
-                    ? throw new ArgumentException("Cannot use prompt for multiline editor.")
-                    : "";
-            Tabulation  = new string(' ', 4);
-            Highlighter = highlighter;
+            SingleLinePrompt = prompt ?? "";
+            TabSize          = 4;
+        }
+
+        public static ScriptBenchSettings FromConfigFile(string filePath = DefaultConfigPath) {
+            if (!Path.IsPathRooted(filePath)) {
+                filePath = Path.Join(AppDomain.CurrentDomain.BaseDirectory, filePath);
+            }
+            if (!File.Exists(filePath)) {
+                return new ScriptBenchSettings();
+            }
+            string json = File.ReadAllText(filePath);
+            try {
+                return JsonConvert.DeserializeObject<ScriptBenchSettings>(json, serializerSettings);
+            }
+            catch (Exception ex) {
+                Console.WriteLine();
+                ConsoleUtils.WriteLine(("ScriptBench reported error while reading config:", ConsoleColor.Red));
+                Console.WriteLine(ex.Message);
+                return new ScriptBenchSettings();
+            }
+        }
+
+        public void CreateMissingConfig() {
+            if (!File.Exists(DefaultConfigPath)) {
+                SaveConfigFile();
+            }
+        }
+
+        public void SaveConfigFile(string filePath = DefaultConfigPath) {
+            File.WriteAllText(
+                filePath,
+                JsonConvert.SerializeObject(this, serializerSettings)
+            );
+        }
+
+        private static JsonSerializerSettings serializerSettings = new JsonSerializerSettings {
+            Formatting       = Formatting.Indented,
+            TypeNameHandling = TypeNameHandling.Auto,
+            Converters       = { new SafeEnumConverter<ConsoleColor>(ConsoleColor.DarkGray) }
+        };
+
+        /// <summary>
+        ///     ┌  ┐  └  ┘  │  ├  ┤  ─  ┬  ┴  ┼
+        /// </summary>
+        [JsonObject]
+        public class BoxDrawingCharactersCollection {
+            public char DownRight      = '┌';
+            public char DownLeft       = '┐';
+            public char UpRight        = '└';
+            public char UpLeft         = '┘';
+            public char Vertical       = '│';
+            public char VerticalRight  = '├';
+            public char VerticalLeft   = '┤';
+            public char Horizontal     = '─';
+            public char HorizontalDown = '┬';
+            public char HorizontalUp   = '┴';
+            public char Cross          = '┼';
+        }
+
+        public class SafeEnumConverter<T> : StringEnumConverter where T : Enum {
+            private T DefaultValue { get; }
+
+            public SafeEnumConverter(T defaultValue) {
+                DefaultValue = defaultValue;
+            }
+
+            public override object ReadJson(
+                JsonReader     reader,
+                Type           objectType,
+                object         existingValue,
+                JsonSerializer serializer
+            ) {
+                try {
+                    return base.ReadJson(reader, objectType, existingValue, serializer);
+                }
+                catch (JsonSerializationException) {
+                    return DefaultValue;
+                }
+            }
         }
     }
 }

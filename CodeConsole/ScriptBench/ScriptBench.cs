@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using TextCopy;
 
 namespace CodeConsole.ScriptBench {
@@ -9,10 +10,29 @@ namespace CodeConsole.ScriptBench {
     ///     syntax highlighting & handy keyboard shortcuts.
     /// </summary>
     public partial class ScriptBench {
+        private static readonly Assembly coreAsm = Assembly.GetExecutingAssembly();
+        public static readonly  string   Version = coreAsm.GetName().Version.ToString();
+
         /// <summary>
         ///     Editor's instance-specific settings.
         /// </summary>
         private readonly ScriptBenchSettings settings;
+
+        /// <summary>
+        ///     Use only 1 editable line.
+        /// </summary>
+        private readonly bool singleLineMode;
+
+        /// <summary>
+        ///     Current enabled syntax highlighter.
+        /// </summary>
+        private readonly IScriptBenchSyntaxHighlighter highlighter;
+
+        /// <summary>
+        ///     Highlight user input with specified <see cref="highlighter" />.
+        ///     True if highlighter is not null.
+        /// </summary>
+        private bool syntaxHighlighting => highlighter != null;
 
         /// <summary>
         ///     Editor's code lines.
@@ -26,7 +46,7 @@ namespace CodeConsole.ScriptBench {
         ///     You should use <see cref="lines" />[<see cref="cursorY" />] when you
         ///     don't want to re-render input instead.
         /// </summary>
-        private string Line {
+        private string line {
             get => lines[cursorY];
             set {
                 lines[cursorY] = value;
@@ -51,7 +71,13 @@ namespace CodeConsole.ScriptBench {
         /// </summary>
         private int cursorY {
             get => Console.CursorTop - editBoxPoint.Y;
-            set => Console.CursorTop = value + editBoxPoint.Y;
+            set {
+                int top = value + editBoxPoint.Y;
+                if (Console.BufferHeight <= top) {
+                    Console.BufferHeight = top + 1;
+                }
+                Console.CursorTop = top;
+            }
         }
 
         /// <summary>
@@ -60,16 +86,16 @@ namespace CodeConsole.ScriptBench {
         ///     use <see cref="Run"/> method.
         /// </summary>
         public ScriptBench(
-            ScriptBenchSettings editorSettings = null,
-            string              firstCodeLine  = "",
-            bool                showFullHelp   = false
+            ScriptBenchSettings           settings       = null,
+            string                        firstCodeLine  = "",
+            bool                          singleLineMode = false,
+            IScriptBenchSyntaxHighlighter highlighter    = null
         ) {
-            settings = editorSettings ?? new ScriptBenchSettings();
+            this.settings = settings
+                         ?? ScriptBenchSettings.FromConfigFile();
+            this.singleLineMode = singleLineMode;
+            this.highlighter    = highlighter;
             lines.Add(firstCodeLine);
-
-            if (showFullHelp) {
-                DrawHelpBox();
-            }
         }
 
         /// <summary>
@@ -77,24 +103,23 @@ namespace CodeConsole.ScriptBench {
         ///     Returns code lines when user finished editing.
         /// </summary>
         public string[] Run() {
-            if (settings.SingleLineMode) {
+            if (singleLineMode) {
                 ConsoleUtils.ClearLine();
-                Console.Write(settings.Prompt);
+                Console.Write(settings.SingleLinePrompt);
             }
 
+            EnsureWindowSize();
+            DrawTopFrame();
+
             // mark editor's edit box coordinates
-            if (settings.SingleLineMode && settings.Prompt.Length > 0) {
-                editBoxPoint.X = settings.Prompt.Length;
+            if (singleLineMode) {
+                editBoxPoint.X = settings.SingleLinePrompt.Length;
             }
             else {
                 editBoxPoint.X = 8;
             }
-
-            DrawTopFrame();
-
             editBoxPoint.Y = Console.CursorTop;
-
-            cursorX = Line.Length;
+            cursorX        = line.Length;
 
             // highlight first line
             RenderCode();
@@ -102,13 +127,26 @@ namespace CodeConsole.ScriptBench {
             var exit = false;
             while (!exit) {
                 ConsoleKeyInfo key = Console.ReadKey(true);
+                EnsureWindowSize();
                 if (HandleCursorAction(key)) {
                     continue;
                 }
                 exit = HandleEditAction(key);
             }
 
+            // remove empty editor box
+            if (!singleLineMode && lines.Count == 1 && string.IsNullOrWhiteSpace(lines[0])) {
+                ClearLine(true);
+                for (var i = 0; i < 3; i++) {
+                    Console.CursorTop--;
+                    ClearLine(true);
+                }
+                return lines.ToArray();
+            }
+
             DrawBottomFrame();
+
+            settings.CreateMissingConfig();
 
             return lines.Count == 0
                 ? new[] { "" }
@@ -142,7 +180,7 @@ namespace CodeConsole.ScriptBench {
 
             case ConsoleKey.End: {
                 // to line end
-                cursorX = Line.Length;
+                cursorX = line.Length;
                 break;
             }
 
@@ -154,8 +192,8 @@ namespace CodeConsole.ScriptBench {
                     cursorY = 0;
                 }
 
-                if (cursorX > Line.Length) {
-                    cursorX = Line.Length;
+                if (cursorX > line.Length) {
+                    cursorX = line.Length;
                 }
 
                 break;
@@ -169,8 +207,8 @@ namespace CodeConsole.ScriptBench {
                     cursorY = lines.Count - 1;
                 }
 
-                if (cursorX > Line.Length) {
-                    cursorX = Line.Length;
+                if (cursorX > line.Length) {
+                    cursorX = line.Length;
                 }
 
                 break;
@@ -198,7 +236,7 @@ namespace CodeConsole.ScriptBench {
             switch (key.Key) {
             case ConsoleKey.Escape: {
                 // use [Enter] in single line mode instead.
-                if (settings.SingleLineMode) {
+                if (singleLineMode) {
                     break;
                 }
 
@@ -211,7 +249,7 @@ namespace CodeConsole.ScriptBench {
             }
 
             case ConsoleKey.Enter: {
-                if (settings.SingleLineMode) {
+                if (singleLineMode) {
                     return true;
                 }
 
@@ -232,13 +270,13 @@ namespace CodeConsole.ScriptBench {
             case ConsoleKey.Tab: {
                 // Shift + Tab: outdent current tab
                 if (key.Modifiers.HasFlag(ConsoleModifiers.Shift)
-                 && Line.StartsWith(settings.Tabulation)) {
-                    Line = Line.Remove(0, settings.Tabulation.Length);
+                 && line.StartsWith(settings.Tabulation)) {
+                    line = line.Remove(0, settings.Tabulation.Length);
                 }
                 // if on the left side of cursor there are only whitespaces
-                else if (string.IsNullOrWhiteSpace(Line.Substring(0, cursorX))) {
+                else if (string.IsNullOrWhiteSpace(line.Substring(0, cursorX))) {
                     cursorX += settings.Tabulation.Length;
-                    Line    =  settings.Tabulation + lines[cursorY];
+                    line    =  settings.Tabulation + lines[cursorY];
                 }
                 else {
                     WriteValue(' ');
@@ -274,12 +312,20 @@ namespace CodeConsole.ScriptBench {
                     }
                     RenderCode();
                     cursorY = k;
+                    cursorX = lines[k].Length;
                 }
                 break;
             }
 
             // TODO (UI) add something for FN keys
-            case ConsoleKey.F3:
+            case ConsoleKey.F3: {
+                key = Console.ReadKey(true);
+                if (key.Key == ConsoleKey.F3) {
+                    ClearAll();
+                }
+
+                break;
+            }
             case ConsoleKey.F4:
             case ConsoleKey.F5:
             case ConsoleKey.F6:
@@ -307,6 +353,8 @@ namespace CodeConsole.ScriptBench {
             return false;
         }
 
+        private int lastXPosition;
+
         /// <summary>
         ///     Moves cursor in edit box to specified <see cref="direction" /> by specified <see cref="length"/>.
         /// </summary>
@@ -324,44 +372,47 @@ namespace CodeConsole.ScriptBench {
                     cursorX -= length;
                 }
                 // move line up
-                else if (!settings.SingleLineMode) {
+                else if (!singleLineMode) {
                     cursorY--;
-                    cursorX = Line.Length; // no - 1
+                    cursorX = line.Length; // no - 1
                 }
-
+                lastXPosition = cursorX;
                 break;
             }
 
             case ConsoleKey.RightArrow: {
                 // if reach last line end
                 if (cursorY == lines.Count - 1
-                 && cursorX                + length > Line.Length) {
+                 && cursorX                + length > line.Length) {
                     return;
                 }
 
                 // if fits in current line
-                if (cursorX + length <= Line.Length) {
+                if (cursorX + length <= line.Length) {
                     cursorX += length;
                 }
                 // move line down
-                else if (!settings.SingleLineMode) {
+                else if (!singleLineMode) {
                     cursorY++;
                     cursorX = 0;
                 }
-
+                lastXPosition = cursorX;
                 break;
             }
 
             case ConsoleKey.UpArrow: {
                 // if on first line
-                if (cursorY == 0 || settings.SingleLineMode) {
+                if (cursorY == 0 || singleLineMode) {
                     return;
                 }
 
                 cursorY--;
                 // if cursor moves at empty space upside
-                if (cursorX >= Line.Length) {
-                    cursorX = Line.Length;
+                if (cursorX > line.Length) {
+                    cursorX = line.Length;
+                }
+                else if (line.Length >= lastXPosition) {
+                    cursorX = lastXPosition;
                 }
 
                 break;
@@ -369,14 +420,17 @@ namespace CodeConsole.ScriptBench {
 
             case ConsoleKey.DownArrow: {
                 // if on last line
-                if (cursorY == lines.Count - 1 || settings.SingleLineMode) {
+                if (cursorY == lines.Count - 1 || singleLineMode) {
                     return;
                 }
 
                 cursorY++;
                 // if cursor moves at empty space downside
-                if (cursorX >= Line.Length) {
-                    cursorX = Line.Length;
+                if (cursorX > line.Length) {
+                    cursorX = line.Length;
+                }
+                else if (line.Length >= lastXPosition) {
+                    cursorX = lastXPosition;
                 }
 
                 break;
