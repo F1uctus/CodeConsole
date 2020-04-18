@@ -91,8 +91,7 @@ namespace CodeConsole.ScriptBench {
             bool                          singleLineMode = false,
             IScriptBenchSyntaxHighlighter highlighter    = null
         ) {
-            this.settings = settings
-                         ?? ScriptBenchSettings.FromConfigFile();
+            this.settings       = settings ?? ScriptBenchSettings.FromConfigFile();
             this.singleLineMode = singleLineMode;
             this.highlighter    = highlighter;
             lines.Add(firstCodeLine);
@@ -149,7 +148,9 @@ namespace CodeConsole.ScriptBench {
             settings.CreateMissingConfig();
 
             return lines.Count == 0
-                ? new[] { "" }
+                ? new[] {
+                    ""
+                }
                 : lines.ToArray();
         }
 
@@ -293,11 +294,15 @@ namespace CodeConsole.ScriptBench {
 
             case ConsoleKey.F2: {
                 // paste
-                List<string> linesToPaste =
-                    Clipboard.GetText()
-                             .Replace("\t", settings.Tabulation)
-                             .Split(new[] { Environment.NewLine }, StringSplitOptions.None)
-                             .ToList();
+                List<string> linesToPaste = Clipboard.GetText()
+                                                     .Replace("\t", settings.Tabulation)
+                                                     .Split(
+                                                         new[] {
+                                                             Environment.NewLine
+                                                         },
+                                                         StringSplitOptions.None
+                                                     )
+                                                     .ToList();
                 if (linesToPaste.Count > 0) {
                     int k = cursorY;
                     lines[k] += linesToPaste[0];
@@ -362,8 +367,7 @@ namespace CodeConsole.ScriptBench {
             switch (direction) {
             case ConsoleKey.LeftArrow: {
                 // if reach first line start
-                if (cursorY          == 0
-                 && cursorX - length < 0) {
+                if (cursorY == 0 && cursorX - length < 0) {
                     return;
                 }
 
@@ -382,8 +386,7 @@ namespace CodeConsole.ScriptBench {
 
             case ConsoleKey.RightArrow: {
                 // if reach last line end
-                if (cursorY == lines.Count - 1
-                 && cursorX                + length > line.Length) {
+                if (cursorY == lines.Count - 1 && cursorX + length > line.Length) {
                     return;
                 }
 

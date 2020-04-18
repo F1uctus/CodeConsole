@@ -15,8 +15,12 @@ namespace CodeConsole.ScriptBench {
         ///     Assigning it to null will write default header message.
         /// </summary>
         private string EditorHeader {
-            set => Console.Title =
-                "ScriptBench v." + Version + ": " + (string.IsNullOrWhiteSpace(value) ? settings.DefaultHeader : value);
+            set => Console.Title = "ScriptBench v."
+                                 + Version
+                                 + ": "
+                                 + (string.IsNullOrWhiteSpace(value)
+                                       ? settings.DefaultHeader
+                                       : value);
         }
 
         /// <summary>
@@ -36,7 +40,11 @@ namespace CodeConsole.ScriptBench {
             // letters
             foreach (char c in name) {
                 Write(("│ ", ConsoleColor.DarkGray));
-                WithRandomFontColor(() => { Console.Write(c); });
+                WithRandomFontColor(
+                    () => {
+                        Console.Write(c);
+                    }
+                );
                 Write((" │ ", ConsoleColor.DarkGray));
             }
             Console.WriteLine();
@@ -46,19 +54,30 @@ namespace CodeConsole.ScriptBench {
                 Write(("└───┘ ", ConsoleColor.DarkGray));
             }
             Console.WriteLine();
-            WriteLine(("┌─────────────────────────────────────────────────────────────────┐", ConsoleColor.DarkGray));
+            WriteLine(
+                ("┌─────────────────────────────────────────────────────────────────┐",
+                 ConsoleColor.DarkGray)
+            );
             WriteLine(
                 ("│", ConsoleColor.DarkGray),
-                ("      ScriptBench - the best code editor for 19th century ;)     ", ConsoleColor.White),
+                ("      ScriptBench - the best code editor for 19th century ;)     ",
+                 ConsoleColor.White),
                 ("│", ConsoleColor.DarkGray)
             );
-            WriteLine(("├─────────────────────────────────────────────────────────────────┤", ConsoleColor.DarkGray));
+            WriteLine(
+                ("├─────────────────────────────────────────────────────────────────┤",
+                 ConsoleColor.DarkGray)
+            );
             WriteLine(
                 ("│", ConsoleColor.DarkGray),
-                (" Hotkey            Description                                   ", ConsoleColor.White),
+                (" Hotkey            Description                                   ",
+                 ConsoleColor.White),
                 ("│", ConsoleColor.DarkGray)
             );
-            WriteLine(("├─────────────────┬───────────────────────────────────────────────┤", ConsoleColor.DarkGray));
+            WriteLine(
+                ("├─────────────────┬───────────────────────────────────────────────┤",
+                 ConsoleColor.DarkGray)
+            );
             WriteLine(
                 ("│", ConsoleColor.DarkGray),
                 (" [Esc] + [Esc]   ", ConsoleColor.White),
@@ -108,7 +127,10 @@ namespace CodeConsole.ScriptBench {
                 (" Remove 4 spaces from the line start.          ", ConsoleColor.White),
                 ("│", ConsoleColor.DarkGray)
             );
-            WriteLine(("└─────────────────┴───────────────────────────────────────────────┘", ConsoleColor.DarkGray));
+            WriteLine(
+                ("└─────────────────┴───────────────────────────────────────────────┘",
+                 ConsoleColor.DarkGray)
+            );
         }
 
         private int lastWidthToEnsure;
@@ -124,7 +146,7 @@ namespace CodeConsole.ScriptBench {
                 Console.WindowWidth = lastWidthToEnsure;
             }
             if (Console.BufferHeight < minH) {
-                lastHeightToEnsure   = Math.Max(lines.Count + 10, Math.Max(lastHeightToEnsure, minW));
+                lastHeightToEnsure = Math.Max(lines.Count + 10, Math.Max(lastHeightToEnsure, minW));
                 Console.BufferHeight = lastHeightToEnsure;
             }
         }
@@ -146,7 +168,15 @@ namespace CodeConsole.ScriptBench {
             );
             Write((settings.DrawingChars.Vertical + " ", settings.MainColor));
             var keys = new Dictionary<string, string> {
-                { "[Esc]x2", "exit" }, { "[F1]", "copy" }, { "[F2]", "paste" }, { "[F3]x2", "clear all" }
+                {
+                    "[Esc]x2", "exit"
+                }, {
+                    "[F1]", "copy"
+                }, {
+                    "[F2]", "paste"
+                }, {
+                    "[F3]x2", "clear all"
+                }
             };
             foreach (KeyValuePair<string, string> key in keys) {
                 Write(
@@ -181,7 +211,8 @@ namespace CodeConsole.ScriptBench {
             cursorY            = lines.Count;
             Console.CursorLeft = 0;
             // render lower bound
-            string prefix = new string(settings.DrawingChars.Horizontal, 6) + settings.DrawingChars.HorizontalUp;
+            string prefix = new string(settings.DrawingChars.Horizontal, 6)
+                          + settings.DrawingChars.HorizontalUp;
             WriteLine(
                 (prefix + new string(settings.DrawingChars.Horizontal, Console.BufferWidth - prefix.Length - 1),
                  settings.MainColor)
@@ -204,11 +235,9 @@ namespace CodeConsole.ScriptBench {
         private void DrawLineNumber(int lineNumber) {
             var strNum = lineNumber.ToString();
             int width  = Math.Max(strNum.Length, 4);
-            string view =
-                strNum.PadLeft(width  + 1)
-                      .PadRight(width + 2)
-              + settings.DrawingChars.Vertical
-              + " ";
+            string view = strNum.PadLeft(width + 1).PadRight(width + 2)
+                        + settings.DrawingChars.Vertical
+                        + " ";
             Write((view, settings.MainColor));
         }
     }

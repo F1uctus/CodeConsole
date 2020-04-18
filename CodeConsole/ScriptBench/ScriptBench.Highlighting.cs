@@ -88,8 +88,7 @@ namespace CodeConsole.ScriptBench {
             if (!settings.ShowWhitespaces) {
                 return input;
             }
-            return input.Replace("\t", settings.Tabulation)
-                        .Replace(' ', '·');
+            return input.Replace("\t", settings.Tabulation).Replace(' ', '·');
         }
 
         /// <summary>
@@ -98,12 +97,11 @@ namespace CodeConsole.ScriptBench {
         ///     After that, sets editor header to first blame found by highlighter.
         /// </summary>
         private void HighlightSyntax() {
-            List<ColoredValue> values =
-                highlighter.Highlight(
-                    lines,
-                    ref newRenderStartPosition,
-                    out IReadOnlyList<Exception> blames
-                );
+            List<ColoredValue> values = highlighter.Highlight(
+                lines,
+                ref newRenderStartPosition,
+                out IReadOnlyList<Exception> blames
+            );
 
             cursorX = newRenderStartPosition.X;
             cursorY = newRenderStartPosition.Y;

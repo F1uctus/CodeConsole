@@ -31,7 +31,10 @@ namespace CodeConsole {
             WithFontColor(
                 fontColor,
                 () => {
-                    var editor = new ScriptBench.ScriptBench(new ScriptBenchSettings(prompt), singleLineMode: true);
+                    var editor = new ScriptBench.ScriptBench(
+                        new ScriptBenchSettings(prompt),
+                        singleLineMode: true
+                    );
                     result = editor.Run()[0];
                 }
             );
@@ -219,7 +222,10 @@ namespace CodeConsole {
             string[]     colorNames = Enum.GetNames(typeof(ConsoleColor));
             ConsoleColor result;
             do {
-                result = (ConsoleColor) Enum.Parse(typeof(ConsoleColor), colorNames[rnd.Next(colorNames.Length)]);
+                result = (ConsoleColor) Enum.Parse(
+                    typeof(ConsoleColor),
+                    colorNames[rnd.Next(colorNames.Length)]
+                );
             } while (result == ConsoleColor.Black);
             return result;
         }

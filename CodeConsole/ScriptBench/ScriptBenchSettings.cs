@@ -12,32 +12,27 @@ namespace CodeConsole.ScriptBench {
         /// <summary>
         ///     Default text to be shown in editor's header.
         /// </summary>
-        [JsonProperty]
-        public string DefaultHeader = "No errors found.";
+        [JsonProperty] public string DefaultHeader = "No errors found.";
 
         /// <summary>
         ///     Console color for editor UI.
         /// </summary>
-        [JsonProperty]
-        public ConsoleColor MainColor = DefaultFramesColor;
+        [JsonProperty] public ConsoleColor MainColor = DefaultFramesColor;
 
         /// <summary>
         ///     Console color for editor UI elements.
         /// </summary>
-        [JsonProperty]
-        public ConsoleColor AccentColor = ConsoleColor.Magenta;
+        [JsonProperty] public ConsoleColor AccentColor = ConsoleColor.Magenta;
 
         /// <summary>
         ///     User prompt used in single-line mode.
         /// </summary>
-        [JsonProperty]
-        public readonly string SingleLinePrompt;
+        [JsonProperty] public readonly string SingleLinePrompt;
 
         /// <summary>
         ///     Tab character used in editor.
         /// </summary>
-        [JsonProperty]
-        public int TabSize;
+        [JsonProperty] public int TabSize;
 
         /// <summary>
         ///     Tab character used in editor.
@@ -47,15 +42,12 @@ namespace CodeConsole.ScriptBench {
         /// <summary>
         ///     If true, highlights leading whitespaces as unicode middle-dots.
         /// </summary>
-        [JsonProperty]
-        public bool ShowWhitespaces;
+        [JsonProperty] public bool ShowWhitespaces;
 
-        [JsonProperty]
-        public BoxDrawingCharactersCollection DrawingChars = new BoxDrawingCharactersCollection();
+        [JsonProperty] public BoxDrawingCharactersCollection DrawingChars =
+            new BoxDrawingCharactersCollection();
 
-        public ScriptBenchSettings(
-            string prompt = null
-        ) {
+        public ScriptBenchSettings(string prompt = null) {
             SingleLinePrompt = prompt ?? "";
             TabSize          = 4;
         }
@@ -73,7 +65,9 @@ namespace CodeConsole.ScriptBench {
             }
             catch (Exception ex) {
                 Console.WriteLine();
-                ConsoleUtils.WriteLine(("ScriptBench reported error while reading config:", ConsoleColor.Red));
+                ConsoleUtils.WriteLine(
+                    ("ScriptBench reported error while reading config:", ConsoleColor.Red)
+                );
                 Console.WriteLine(ex.Message);
                 return new ScriptBenchSettings();
             }
@@ -86,16 +80,15 @@ namespace CodeConsole.ScriptBench {
         }
 
         public void SaveConfigFile(string filePath = DefaultConfigPath) {
-            File.WriteAllText(
-                filePath,
-                JsonConvert.SerializeObject(this, serializerSettings)
-            );
+            File.WriteAllText(filePath, JsonConvert.SerializeObject(this, serializerSettings));
         }
 
         private static JsonSerializerSettings serializerSettings = new JsonSerializerSettings {
             Formatting       = Formatting.Indented,
             TypeNameHandling = TypeNameHandling.Auto,
-            Converters       = { new SafeEnumConverter<ConsoleColor>(ConsoleColor.DarkGray) }
+            Converters = {
+                new SafeEnumConverter<ConsoleColor>(ConsoleColor.DarkGray)
+            }
         };
 
         /// <summary>
@@ -116,7 +109,8 @@ namespace CodeConsole.ScriptBench {
             public char Cross          = '┼';
         }
 
-        public class SafeEnumConverter<T> : StringEnumConverter where T : Enum {
+        public class SafeEnumConverter<T> : StringEnumConverter
+            where T : Enum {
             private T DefaultValue { get; }
 
             public SafeEnumConverter(T defaultValue) {
@@ -130,7 +124,12 @@ namespace CodeConsole.ScriptBench {
                 JsonSerializer serializer
             ) {
                 try {
-                    return base.ReadJson(reader, objectType, existingValue, serializer);
+                    return base.ReadJson(
+                        reader,
+                        objectType,
+                        existingValue,
+                        serializer
+                    );
                 }
                 catch (JsonSerializationException) {
                     return DefaultValue;
