@@ -79,6 +79,8 @@ namespace CodeConsole.ScriptBench {
                 Console.CursorTop = top;
             }
         }
+        
+        private readonly Clipboard clipboard = new Clipboard();
 
         /// <summary>
         ///     Initializes the editor background.
@@ -288,37 +290,45 @@ namespace CodeConsole.ScriptBench {
 
             case ConsoleKey.F1: {
                 // copy
-                Clipboard.SetText(string.Join("\n", lines));
+                clipboard.SetText(string.Join("\n", lines));
                 break;
             }
 
             case ConsoleKey.F2: {
                 // paste
-                List<string> linesToPaste = Clipboard.GetText()
-                                                     .Replace("\t", settings.Tabulation)
-                                                     .Split(
-                                                         new[] {
-                                                             Environment.NewLine
-                                                         },
-                                                         StringSplitOptions.None
-                                                     )
-                                                     .ToList();
-                if (linesToPaste.Count > 0) {
-                    int k = cursorY;
-                    lines[k] += linesToPaste[0];
-                    for (var i = 1; i < linesToPaste.Count; i++) {
-                        k++;
-                        if (k >= lines.Count) {
-                            lines.Add(linesToPaste[i]);
+                string clipText = clipboard.GetText();
+                if (!string.IsNullOrWhiteSpace(clipText)) {
+                    List<string> linesToPaste = clipText
+                                                .Replace(
+                                                    "\t",
+                                                    settings.Tabulation
+                                                )
+                                                .Split(
+                                                    new[] {
+                                                        Environment.NewLine
+                                                    },
+                                                    StringSplitOptions.None
+                                                )
+                                                .ToList();
+                    if (linesToPaste.Count > 0) {
+                        int k = cursorY;
+                        lines[k] += linesToPaste[0];
+                        for (var i = 1; i < linesToPaste.Count; i++) {
+                            k++;
+                            if (k >= lines.Count) {
+                                lines.Add(linesToPaste[i]);
+                            }
+                            else {
+                                lines.Insert(k, linesToPaste[i]);
+                            }
                         }
-                        else {
-                            lines.Insert(k, linesToPaste[i]);
-                        }
+
+                        RenderCode();
+                        cursorY = k;
+                        cursorX = lines[k].Length;
                     }
-                    RenderCode();
-                    cursorY = k;
-                    cursorX = lines[k].Length;
                 }
+
                 break;
             }
 
