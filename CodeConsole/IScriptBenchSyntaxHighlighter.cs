@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -28,7 +28,7 @@ namespace CodeConsole {
         }
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private string debuggerDisplay =>
+        string debuggerDisplay =>
             $"{Color:G}: '{HttpUtility.JavaScriptStringEncode(Value)}'";
     }
 }

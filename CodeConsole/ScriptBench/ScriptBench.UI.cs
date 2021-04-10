@@ -8,13 +8,13 @@ namespace CodeConsole.ScriptBench {
         /// <summary>
         ///     Editor's area top-left position in console.
         /// </summary>
-        private Point editBoxPoint;
+        Point editBoxPoint;
 
         /// <summary>
         ///     Sets text in editor header.
         ///     Assigning it to null will write default header message.
         /// </summary>
-        private string EditorHeader {
+        string EditorHeader {
             set => Console.Title = "ScriptBench v."
                                  + Version
                                  + ": "
@@ -133,8 +133,8 @@ namespace CodeConsole.ScriptBench {
             );
         }
 
-        private int lastWidthToEnsure;
-        private int lastHeightToEnsure;
+        int lastWidthToEnsure;
+        int lastHeightToEnsure;
 
         /// <summary>
         ///     Ensures that console has minimal defined width & height
@@ -156,7 +156,7 @@ namespace CodeConsole.ScriptBench {
         ///     This should be called only when editor is created.
         ///     This function does nothing in single-line mode.
         /// </summary>
-        private void DrawTopFrame() {
+        void DrawTopFrame() {
             if (singleLineMode) {
                 return;
             }
@@ -202,7 +202,7 @@ namespace CodeConsole.ScriptBench {
         ///     Should be called only when user finished his work.
         ///     This function does nothing in single-line mode.
         /// </summary>
-        private void DrawBottomFrame() {
+        void DrawBottomFrame() {
             if (singleLineMode) {
                 return;
             }
@@ -222,7 +222,7 @@ namespace CodeConsole.ScriptBench {
         /// <summary>
         ///     Prints current line number on the left side of editor.
         /// </summary>
-        private void DrawCurrentLineNumber() {
+        void DrawCurrentLineNumber() {
             DrawLineNumber(cursorY + 1);
         }
 
@@ -232,7 +232,7 @@ namespace CodeConsole.ScriptBench {
         ///         Format: ` XXXX | `
         ///     </c>
         /// </summary>
-        private void DrawLineNumber(int lineNumber) {
+        void DrawLineNumber(int lineNumber) {
             var strNum = lineNumber.ToString();
             int width  = Math.Max(strNum.Length, 4);
             string view = strNum.PadLeft(width + 1).PadRight(width + 2)
