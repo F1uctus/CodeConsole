@@ -23,6 +23,13 @@ namespace CodeConsole.ScriptBench {
                                        : value);
         }
 
+        static readonly Dictionary<string, string> keys = new() {
+            { "[Esc]x2", "exit" },
+            { "[F1]", "copy" },
+            { "[F2]", "paste" },
+            { "[F3]x2", "clear all" }
+        };
+
         /// <summary>
         ///     Draws box with help on current line start.
         ///     Don't invoke it during normal editing workflow.
@@ -38,7 +45,7 @@ namespace CodeConsole.ScriptBench {
             Console.WriteLine();
             Console.Write(" ");
             // letters
-            foreach (char c in name) {
+            foreach (var c in name) {
                 Write(("│ ", ConsoleColor.DarkGray));
                 WithRandomFontColor(() => {
                     Console.Write(c);
@@ -170,22 +177,11 @@ namespace CodeConsole.ScriptBench {
                  settings.MainColor)
             );
             Write((settings.DrawingChars.Vertical + " ", settings.MainColor));
-            var keys = new Dictionary<string, string> {
-                {
-                    "[Esc]x2", "exit"
-                }, {
-                    "[F1]", "copy"
-                }, {
-                    "[F2]", "paste"
-                }, {
-                    "[F3]x2", "clear all"
-                }
-            };
-            foreach (KeyValuePair<string, string> key in keys) {
+            foreach (var (key, value) in keys) {
                 Write(
-                    (key.Key, settings.AccentColor),
+                    (key, settings.AccentColor),
                     (" ", ConsoleColor.White),
-                    (key.Value, ConsoleColor.Gray),
+                    (value, ConsoleColor.Gray),
                     ("   ", ConsoleColor.White)
                 );
             }
@@ -239,9 +235,7 @@ namespace CodeConsole.ScriptBench {
 
         /// <summary>
         ///     Prints specified line number on the left side of editor.
-        ///     <c>
-        ///         Format: ` XXXX | `
-        ///     </c>
+        ///     <c>Format: ` XXXX | `</c>
         /// </summary>
         void DrawLineNumber(int lineNumber) {
             var strNum = lineNumber.ToString();

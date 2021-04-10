@@ -39,7 +39,7 @@ namespace CodeConsole.ScriptBench {
         ///     Tab character used in editor.
         /// </summary>
         [JsonIgnore]
-        public string Tabulation => new string(' ', TabSize);
+        public string Tabulation => new(' ', TabSize);
 
         /// <summary>
         ///     If true, highlights leading whitespaces as unicode middle-dots.
@@ -62,7 +62,7 @@ namespace CodeConsole.ScriptBench {
             if (!File.Exists(filePath)) {
                 return new ScriptBenchSettings();
             }
-            string json = File.ReadAllText(filePath);
+            var json = File.ReadAllText(filePath);
             try {
                 return JsonConvert.DeserializeObject<ScriptBenchSettings>(json,
                     serializerSettings);
@@ -88,7 +88,7 @@ namespace CodeConsole.ScriptBench {
                 JsonConvert.SerializeObject(this, serializerSettings));
         }
 
-        static JsonSerializerSettings serializerSettings = new JsonSerializerSettings {
+        static JsonSerializerSettings serializerSettings = new() {
             Formatting       = Formatting.Indented,
             TypeNameHandling = TypeNameHandling.Auto,
             Converters = {

@@ -37,7 +37,7 @@ namespace CodeConsole.ScriptBench {
         /// <summary>
         ///     Editor's code lines.
         /// </summary>
-        readonly List<string> lines = new List<string>();
+        readonly List<string> lines = new();
 
         /// <summary>
         ///     Current editing line.
@@ -72,7 +72,7 @@ namespace CodeConsole.ScriptBench {
         int cursorY {
             get => Console.CursorTop - editBoxPoint.Y;
             set {
-                int top = value + editBoxPoint.Y;
+                var top = value + editBoxPoint.Y;
                 if (Console.BufferHeight <= top) {
                     Console.BufferHeight = top + 1;
                 }
@@ -80,7 +80,7 @@ namespace CodeConsole.ScriptBench {
             }
         }
 
-        readonly Clipboard clipboard = new Clipboard();
+        readonly Clipboard clipboard = new();
 
         /// <summary>
         ///     Initializes the editor background.
@@ -113,12 +113,9 @@ namespace CodeConsole.ScriptBench {
             DrawTopFrame();
 
             // mark editor's edit box coordinates
-            if (singleLineMode) {
-                editBoxPoint.X = settings.SingleLinePrompt.Length;
-            }
-            else {
-                editBoxPoint.X = 8;
-            }
+            editBoxPoint.X = singleLineMode
+                ? settings.SingleLinePrompt.Length
+                : 8;
             editBoxPoint.Y = Console.CursorTop;
             cursorX        = line.Length;
 
@@ -279,7 +276,7 @@ namespace CodeConsole.ScriptBench {
                     line = line.Remove(0, settings.Tabulation.Length);
                 }
                 // if on the left side of cursor there are only whitespaces
-                else if (string.IsNullOrWhiteSpace(line.Substring(0, cursorX))) {
+                else if (string.IsNullOrWhiteSpace(line[..cursorX])) {
                     cursorX += settings.Tabulation.Length;
                     line    =  settings.Tabulation + lines[cursorY];
                 }
@@ -298,9 +295,9 @@ namespace CodeConsole.ScriptBench {
 
             case ConsoleKey.F2: {
                 // paste
-                string clipText = clipboard.GetText();
+                var clipText = clipboard.GetText();
                 if (!string.IsNullOrWhiteSpace(clipText)) {
-                    List<string> linesToPaste = clipText
+                    var linesToPaste = clipText
                         .Replace(
                             "\t",
                             settings.Tabulation
@@ -313,7 +310,7 @@ namespace CodeConsole.ScriptBench {
                         )
                         .ToList();
                     if (linesToPaste.Count > 0) {
-                        int k = cursorY;
+                        var k = cursorY;
                         lines[k] += linesToPaste[0];
                         for (var i = 1; i < linesToPaste.Count; i++) {
                             k++;

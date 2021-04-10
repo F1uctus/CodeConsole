@@ -26,9 +26,9 @@ namespace CodeConsole.ScriptBench {
         /// </summary>
         void SplitLine() {
             newRenderStartPosition.X = 0;
-            string tailPiece = line.Substring(cursorX);
+            var tailPiece = line[cursorX..];
             if (tailPiece.Length > 0) {
-                lines[cursorY] = lines[cursorY].Substring(0, cursorX);
+                lines[cursorY] = lines[cursorY][..cursorX];
             }
 
             // add tail to next line
@@ -58,7 +58,7 @@ namespace CodeConsole.ScriptBench {
                 newRenderStartPosition.X--;
                 // if erasing empty end of line
                 if (cursorX == line.Length && line[cursorX - 1] == ' ') {
-                    lines[cursorY] = lines[cursorY].Substring(0, line.Length - 1);
+                    lines[cursorY] = lines[cursorY][..(line.Length - 1)];
                 }
                 else {
                     line = line.Remove(cursorX - 1, 1);
@@ -68,7 +68,7 @@ namespace CodeConsole.ScriptBench {
             }
             // cursor X == 0
             else {
-                string removingLine = line;
+                var removingLine = line;
                 lines.RemoveAt(cursorY);
                 cursorY--;
                 // append removing line if it is not empty
@@ -106,10 +106,10 @@ namespace CodeConsole.ScriptBench {
                     RenderCode();
                 }
                 // if cursor inside the current line
-                else if (line.Substring(cursorX).TrimEnd().Length == 0) {
+                else if (line[cursorX..].TrimEnd().Length == 0) {
                     // don't redraw line when at the right
                     // side of cursor are only whitespaces.
-                    lines[cursorY] = lines[cursorY].Substring(0, line.Length - 1);
+                    lines[cursorY] = lines[cursorY][..(line.Length - 1)];
                 }
                 else {
                     line = line.Remove(cursorX, 1);

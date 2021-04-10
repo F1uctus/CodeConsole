@@ -46,9 +46,9 @@ namespace CodeConsole.ScriptBench {
         ///     starting from last edited position.
         /// </summary>
         void RenderCode() {
-            int longestLineLen = lines.Max(l => l.Length);
+            var longestLineLen = lines.Max(l => l.Length);
             EnsureWindowSize(longestLineLen + editBoxPoint.X + 1);
-            int linesCountDifference = lines.Count - lastRenderedLinesCount;
+            var linesCountDifference = lines.Count - lastRenderedLinesCount;
             ConsoleUtils.WithCurrentPosition(() => {
                 if (syntaxHighlighting) {
                     HighlightSyntax();
@@ -93,22 +93,22 @@ namespace CodeConsole.ScriptBench {
         ///     After that, sets editor header to first blame found by highlighter.
         /// </summary>
         void HighlightSyntax() {
-            List<ColoredValue> values = highlighter.Highlight(
+            var values = highlighter.Highlight(
                 lines,
                 ref newRenderStartPosition,
-                out IReadOnlyList<Exception> blames
+                out var blames
             );
 
             cursorX = newRenderStartPosition.X;
             cursorY = newRenderStartPosition.Y;
             ClearLines(cursorX, cursorY);
 
-            foreach (ColoredValue value in values) {
-                Console.ForegroundColor = value.Color;
-                if (value.Value.Contains("\n")) {
-                    string[] valueLines = value.Value.Split('\n');
+            foreach (var (color, value, isWhite) in values) {
+                Console.ForegroundColor = color;
+                if (value.Contains("\n")) {
+                    var valueLines = value.Split('\n');
                     for (var j = 0; j < valueLines.Length; j++) {
-                        Console.Write(value.IsWhite
+                        Console.Write(isWhite
                             ? SpacesToDots(valueLines[j])
                             : valueLines[j]);
                         if (j < valueLines.Length - 1) {
@@ -117,18 +117,15 @@ namespace CodeConsole.ScriptBench {
                     }
                     continue;
                 }
-                Console.Write(value.IsWhite ? SpacesToDots(value.Value) : value.Value);
+                Console.Write(isWhite ? SpacesToDots(value) : value);
             }
 
             Console.ForegroundColor = ConsoleColor.White;
 
             // fill message box
-            if (blames.Count == 0) {
-                EditorHeader = null;
-            }
-            else {
-                EditorHeader = blames[0].ToString();
-            }
+            EditorHeader = blames.Count == 0
+                ? null
+                : blames[0].ToString();
         }
     }
 }

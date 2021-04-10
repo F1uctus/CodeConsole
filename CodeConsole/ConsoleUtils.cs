@@ -8,7 +8,7 @@ namespace CodeConsole {
     ///     to simplify console interaction.
     /// </summary>
     public static class ConsoleUtils {
-        static readonly Random rnd = new Random();
+        static readonly Random rnd = new();
 
         /// <summary>
         ///     Prompts user to write something to console.
@@ -93,7 +93,7 @@ namespace CodeConsole {
         ///     Writes messages to the standard output stream.
         /// </summary>
         public static void Write(params string[] messages) {
-            foreach (string message in messages) {
+            foreach (var message in messages) {
                 Console.Write(message);
             }
         }
