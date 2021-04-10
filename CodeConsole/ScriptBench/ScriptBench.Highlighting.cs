@@ -5,15 +5,15 @@ using System.Linq;
 
 namespace CodeConsole.ScriptBench {
     public partial class ScriptBench {
-        private int   lastRenderedLinesCount = 1;
-        private Point newRenderStartPosition;
+        int   lastRenderedLinesCount = 1;
+        Point newRenderStartPosition;
 
         /// <summary>
         ///     Clears every line in editor
         ///     starting with specified coordinates.
         ///     Does not modify code lines.
         /// </summary>
-        private void ClearLines(int fromX, int fromY) {
+        void ClearLines(int fromX, int fromY) {
             ConsoleUtils.WithCurrentPosition(
                 () => {
                     cursorY = fromY;
@@ -30,7 +30,7 @@ namespace CodeConsole.ScriptBench {
         ///     Clears current line.
         ///     Does not modify code lines.
         /// </summary>
-        private void ClearLine(bool fullClear = false, int fromRelativeX = 0) {
+        void ClearLine(bool fullClear = false, int fromRelativeX = 0) {
             if (fullClear) {
                 ConsoleUtils.ClearLine();
             }
@@ -47,7 +47,7 @@ namespace CodeConsole.ScriptBench {
         ///     Highlights current code,
         ///     starting from last edited position.
         /// </summary>
-        private void RenderCode() {
+        void RenderCode() {
             int longestLineLen = lines.Max(l => l.Length);
             EnsureWindowSize(longestLineLen + editBoxPoint.X + 1);
             int linesCountDifference = lines.Count           - lastRenderedLinesCount;
@@ -84,7 +84,7 @@ namespace CodeConsole.ScriptBench {
         ///     replaces \t with tab string from settings,
         ///     then replaces spaces with unicode middle-dots (·)
         /// </summary>
-        private string SpacesToDots(string input) {
+        string SpacesToDots(string input) {
             if (!settings.ShowWhitespaces) {
                 return input;
             }
@@ -96,7 +96,7 @@ namespace CodeConsole.ScriptBench {
         ///     then writes these tokens to editor.
         ///     After that, sets editor header to first blame found by highlighter.
         /// </summary>
-        private void HighlightSyntax() {
+        void HighlightSyntax() {
             List<ColoredValue> values = highlighter.Highlight(
                 lines,
                 ref newRenderStartPosition,

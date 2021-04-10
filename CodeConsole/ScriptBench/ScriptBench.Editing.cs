@@ -9,7 +9,7 @@ namespace CodeConsole.ScriptBench {
         /// <summary>
         ///     Clears all code from editor.
         /// </summary>
-        private void ClearAll() {
+        void ClearAll() {
             cursorX = 0;
             cursorY = lines.Count - 1;
             for (var i = 0; i < lines.Count - 1; i++) {
@@ -24,7 +24,7 @@ namespace CodeConsole.ScriptBench {
         /// <summary>
         ///     Splits line at cursor position into 2 lines.
         /// </summary>
-        private void SplitLine() {
+        void SplitLine() {
             newRenderStartPosition.X = 0;
             string tailPiece = line.Substring(cursorX);
             if (tailPiece.Length > 0) {
@@ -47,7 +47,7 @@ namespace CodeConsole.ScriptBench {
         /// <summary>
         ///     Erases character on the left side of cursor.
         /// </summary>
-        private void EraseLeftChar() {
+        void EraseLeftChar() {
             // if on first line start
             if (cursorX == 0 && cursorY == 0) {
                 return;
@@ -89,7 +89,7 @@ namespace CodeConsole.ScriptBench {
         /// <summary>
         ///     Erases character on the right side of cursor.
         /// </summary>
-        private void EraseRightChar() {
+        void EraseRightChar() {
             // if on last line end
             if (cursorY == lines.Count - 1 && cursorX == line.Length) {
                 return;
@@ -122,7 +122,7 @@ namespace CodeConsole.ScriptBench {
         /// <summary>
         ///     Writes specified <see cref="value" /> to editor.
         /// </summary>
-        private void WriteValue(char value) {
+        void WriteValue(char value) {
             // write value
             if (cursorX == line.Length) {
                 // at end of line

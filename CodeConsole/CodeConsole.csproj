@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>netstandard2.1</TargetFramework>
+        <TargetFramework>net5.0</TargetFramework>
         <ProjectGuid>{2A27FDE2-E014-480D-950E-55925D33BB34}</ProjectGuid>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <PackageId>CodeConsole</PackageId>
@@ -18,8 +18,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+      <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
       <PackageReference Include="TextCopy" Version="4.3.0" />
     </ItemGroup>
-
 </Project>

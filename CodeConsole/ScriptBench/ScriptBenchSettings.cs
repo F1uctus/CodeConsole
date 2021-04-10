@@ -83,7 +83,7 @@ namespace CodeConsole.ScriptBench {
             File.WriteAllText(filePath, JsonConvert.SerializeObject(this, serializerSettings));
         }
 
-        private static JsonSerializerSettings serializerSettings = new JsonSerializerSettings {
+        static JsonSerializerSettings serializerSettings = new JsonSerializerSettings {
             Formatting       = Formatting.Indented,
             TypeNameHandling = TypeNameHandling.Auto,
             Converters = {
@@ -111,7 +111,7 @@ namespace CodeConsole.ScriptBench {
 
         public class SafeEnumConverter<T> : StringEnumConverter
             where T : Enum {
-            private T DefaultValue { get; }
+            T DefaultValue { get; }
 
             public SafeEnumConverter(T defaultValue) {
                 DefaultValue = defaultValue;

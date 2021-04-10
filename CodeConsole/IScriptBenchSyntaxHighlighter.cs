@@ -28,7 +28,13 @@ namespace CodeConsole {
         }
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private string debuggerDisplay =>
+        string debuggerDisplay =>
             $"{Color:G}: '{HttpUtility.JavaScriptStringEncode(Value)}'";
+
+        public void Deconstruct(out ConsoleColor color, out string value, out bool isWhite) {
+            color = Color;
+            value = Value;
+            isWhite = IsWhite;
+        }
     }
 }

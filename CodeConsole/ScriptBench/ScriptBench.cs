@@ -10,34 +10,34 @@ namespace CodeConsole.ScriptBench {
     ///     syntax highlighting & handy keyboard shortcuts.
     /// </summary>
     public partial class ScriptBench {
-        private static readonly Assembly coreAsm = Assembly.GetExecutingAssembly();
+        static readonly Assembly coreAsm = Assembly.GetExecutingAssembly();
         public static readonly  string   Version = coreAsm.GetName().Version.ToString();
 
         /// <summary>
         ///     Editor's instance-specific settings.
         /// </summary>
-        private readonly ScriptBenchSettings settings;
+        readonly ScriptBenchSettings settings;
 
         /// <summary>
         ///     Use only 1 editable line.
         /// </summary>
-        private readonly bool singleLineMode;
+        readonly bool singleLineMode;
 
         /// <summary>
         ///     Current enabled syntax highlighter.
         /// </summary>
-        private readonly IScriptBenchSyntaxHighlighter highlighter;
+        readonly IScriptBenchSyntaxHighlighter highlighter;
 
         /// <summary>
         ///     Highlight user input with specified <see cref="highlighter" />.
         ///     True if highlighter is not null.
         /// </summary>
-        private bool syntaxHighlighting => highlighter != null;
+        bool syntaxHighlighting => highlighter != null;
 
         /// <summary>
         ///     Editor's code lines.
         /// </summary>
-        private readonly List<string> lines = new List<string>();
+        readonly List<string> lines = new List<string>();
 
         /// <summary>
         ///     Current editing line.
@@ -46,7 +46,7 @@ namespace CodeConsole.ScriptBench {
         ///     You should use <see cref="lines" />[<see cref="cursorY" />] when you
         ///     don't want to re-render input instead.
         /// </summary>
-        private string line {
+        string line {
             get => lines[cursorY];
             set {
                 lines[cursorY] = value;
@@ -59,7 +59,7 @@ namespace CodeConsole.ScriptBench {
         ///     A wrapper over <see cref="Console.CursorLeft" />.
         ///     Position is relative to <see cref="editBoxPoint" />.
         /// </summary>
-        private int cursorX {
+        int cursorX {
             // check that value is in bounds
             get => Console.CursorLeft - editBoxPoint.X;
             set => Console.CursorLeft = value + editBoxPoint.X;
@@ -69,7 +69,7 @@ namespace CodeConsole.ScriptBench {
         ///     A wrapper over <see cref="Console.CursorTop" />.
         ///     Position is relative to <see cref="editBoxPoint" />.
         /// </summary>
-        private int cursorY {
+        int cursorY {
             get => Console.CursorTop - editBoxPoint.Y;
             set {
                 int top = value + editBoxPoint.Y;
@@ -79,8 +79,8 @@ namespace CodeConsole.ScriptBench {
                 Console.CursorTop = top;
             }
         }
-        
-        private readonly Clipboard clipboard = new Clipboard();
+
+        readonly Clipboard clipboard = new Clipboard();
 
         /// <summary>
         ///     Initializes the editor background.
@@ -160,7 +160,7 @@ namespace CodeConsole.ScriptBench {
         ///     Handles actions that causes cursor to move cursor somehow.
         ///     Doesn't mess with editing code at all.
         /// </summary>
-        private bool HandleCursorAction(ConsoleKeyInfo key) {
+        bool HandleCursorAction(ConsoleKeyInfo key) {
             var handled = true;
             switch (key.Key) {
             #region Move cursor with arrows
@@ -235,7 +235,7 @@ namespace CodeConsole.ScriptBench {
         ///     Handles actions that cause code editing.
         ///     Returns true if user requested editor exit.
         /// </summary>
-        private bool HandleEditAction(ConsoleKeyInfo key) {
+        bool HandleEditAction(ConsoleKeyInfo key) {
             switch (key.Key) {
             case ConsoleKey.Escape: {
                 // use [Enter] in single line mode instead.
@@ -368,12 +368,12 @@ namespace CodeConsole.ScriptBench {
             return false;
         }
 
-        private int lastXPosition;
+        int lastXPosition;
 
         /// <summary>
         ///     Moves cursor in edit box to specified <see cref="direction" /> by specified <see cref="length"/>.
         /// </summary>
-        private void MoveCursor(ConsoleKey direction, int length = 1) {
+        void MoveCursor(ConsoleKey direction, int length = 1) {
             switch (direction) {
             case ConsoleKey.LeftArrow: {
                 // if reach first line start
@@ -458,7 +458,7 @@ namespace CodeConsole.ScriptBench {
         ///     Moves cursor to next line start.
         ///     Automatically writes appropriate line number. 
         /// </summary>
-        private void MoveToNextLineStart() {
+        void MoveToNextLineStart() {
             cursorY++;
             if (cursorY == lines.Count) {
                 ClearLine();
