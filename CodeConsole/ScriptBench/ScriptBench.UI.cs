@@ -40,11 +40,9 @@ namespace CodeConsole.ScriptBench {
             // letters
             foreach (char c in name) {
                 Write(("│ ", ConsoleColor.DarkGray));
-                WithRandomFontColor(
-                    () => {
-                        Console.Write(c);
-                    }
-                );
+                WithRandomFontColor(() => {
+                    Console.Write(c);
+                });
                 Write((" │ ", ConsoleColor.DarkGray));
             }
             Console.WriteLine();
@@ -142,11 +140,12 @@ namespace CodeConsole.ScriptBench {
         /// </summary>
         public void EnsureWindowSize(int minW = 50, int minH = 30) {
             if (Console.WindowWidth < minW) {
-                lastWidthToEnsure   = Math.Max(lastWidthToEnsure, minW);
+                lastWidthToEnsure = Math.Max(lastWidthToEnsure, minW);
                 Console.WindowWidth = lastWidthToEnsure;
             }
             if (Console.BufferHeight < minH) {
-                lastHeightToEnsure = Math.Max(lines.Count + 10, Math.Max(lastHeightToEnsure, minW));
+                lastHeightToEnsure = Math.Max(lines.Count + 10,
+                    Math.Max(lastHeightToEnsure, minW));
                 Console.BufferHeight = lastHeightToEnsure;
             }
         }
@@ -163,7 +162,11 @@ namespace CodeConsole.ScriptBench {
 
             Console.CursorLeft = 0;
             WriteLine(
-                (settings.DrawingChars.DownRight + new string(settings.DrawingChars.Horizontal, Console.BufferWidth - 2),
+                (settings.DrawingChars.DownRight
+               + new string(
+                     settings.DrawingChars.Horizontal,
+                     Console.BufferWidth - 2
+                 ),
                  settings.MainColor)
             );
             Write((settings.DrawingChars.Vertical + " ", settings.MainColor));
@@ -188,11 +191,15 @@ namespace CodeConsole.ScriptBench {
             }
             WriteLine();
             // draw upper bound
-            string prefix = settings.DrawingChars.UpRight
-                          + new string(settings.DrawingChars.Horizontal, 5)
-                          + settings.DrawingChars.HorizontalDown;
+            var prefix = settings.DrawingChars.UpRight
+                       + new string(settings.DrawingChars.Horizontal, 5)
+                       + settings.DrawingChars.HorizontalDown;
             WriteLine(
-                (prefix + new string(settings.DrawingChars.Horizontal, Console.BufferWidth - prefix.Length - 1),
+                (prefix
+               + new string(
+                     settings.DrawingChars.Horizontal,
+                     Console.BufferWidth - prefix.Length - 1
+                 ),
                  settings.MainColor)
             );
         }
@@ -208,13 +215,17 @@ namespace CodeConsole.ScriptBench {
             }
 
             // move to editor lower bound
-            cursorY            = lines.Count;
+            cursorY = lines.Count;
             Console.CursorLeft = 0;
             // render lower bound
-            string prefix = new string(settings.DrawingChars.Horizontal, 6)
-                          + settings.DrawingChars.HorizontalUp;
+            var prefix = new string(settings.DrawingChars.Horizontal, 6)
+                       + settings.DrawingChars.HorizontalUp;
             WriteLine(
-                (prefix + new string(settings.DrawingChars.Horizontal, Console.BufferWidth - prefix.Length - 1),
+                (prefix
+               + new string(
+                     settings.DrawingChars.Horizontal,
+                     Console.BufferWidth - prefix.Length - 1
+                 ),
                  settings.MainColor)
             );
         }
@@ -234,10 +245,10 @@ namespace CodeConsole.ScriptBench {
         /// </summary>
         void DrawLineNumber(int lineNumber) {
             var strNum = lineNumber.ToString();
-            int width  = Math.Max(strNum.Length, 4);
-            string view = strNum.PadLeft(width + 1).PadRight(width + 2)
-                        + settings.DrawingChars.Vertical
-                        + " ";
+            var width = Math.Max(strNum.Length, 4);
+            var view = strNum.PadLeft(width + 1).PadRight(width + 2)
+                     + settings.DrawingChars.Vertical
+                     + " ";
             Write((view, settings.MainColor));
         }
     }

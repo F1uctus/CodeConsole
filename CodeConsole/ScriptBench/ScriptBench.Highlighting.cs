@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace CodeConsole.ScriptBench {
     public partial class ScriptBench {
-        int   lastRenderedLinesCount = 1;
+        int lastRenderedLinesCount = 1;
         Point newRenderStartPosition;
 
         /// <summary>
@@ -14,16 +14,14 @@ namespace CodeConsole.ScriptBench {
         ///     Does not modify code lines.
         /// </summary>
         void ClearLines(int fromX, int fromY) {
-            ConsoleUtils.WithCurrentPosition(
-                () => {
-                    cursorY = fromY;
-                    ClearLine(false, fromX);
-                    cursorY++;
-                    for (; cursorY < lines.Count; cursorY++) {
-                        ClearLine();
-                    }
+            ConsoleUtils.WithCurrentPosition(() => {
+                cursorY = fromY;
+                ClearLine(false, fromX);
+                cursorY++;
+                for (; cursorY < lines.Count; cursorY++) {
+                    ClearLine();
                 }
-            );
+            });
         }
 
         /// <summary>
@@ -50,32 +48,30 @@ namespace CodeConsole.ScriptBench {
         void RenderCode() {
             int longestLineLen = lines.Max(l => l.Length);
             EnsureWindowSize(longestLineLen + editBoxPoint.X + 1);
-            int linesCountDifference = lines.Count           - lastRenderedLinesCount;
-            ConsoleUtils.WithCurrentPosition(
-                () => {
-                    if (syntaxHighlighting) {
-                        HighlightSyntax();
-                    }
-                    else if (!singleLineMode && linesCountDifference != 0) {
-                        // rewrite all lines from cursor
-                        for (; cursorY < lines.Count; cursorY++) {
-                            ClearLine();
-                            Console.Write(line);
-                        }
-                    }
-                    else {
+            int linesCountDifference = lines.Count - lastRenderedLinesCount;
+            ConsoleUtils.WithCurrentPosition(() => {
+                if (syntaxHighlighting) {
+                    HighlightSyntax();
+                }
+                else if (!singleLineMode && linesCountDifference != 0) {
+                    // rewrite all lines from cursor
+                    for (; cursorY < lines.Count; cursorY++) {
                         ClearLine();
                         Console.Write(line);
                     }
-
-                    if (linesCountDifference < 0) {
-                        // clear last line
-                        cursorY = lastRenderedLinesCount - 1;
-                        ClearLine(true);
-                        linesCountDifference++;
-                    }
                 }
-            );
+                else {
+                    ClearLine();
+                    Console.Write(line);
+                }
+
+                if (linesCountDifference < 0) {
+                    // clear last line
+                    cursorY = lastRenderedLinesCount - 1;
+                    ClearLine(true);
+                    linesCountDifference++;
+                }
+            });
             lastRenderedLinesCount = lines.Count;
         }
 
@@ -112,7 +108,9 @@ namespace CodeConsole.ScriptBench {
                 if (value.Value.Contains("\n")) {
                     string[] valueLines = value.Value.Split('\n');
                     for (var j = 0; j < valueLines.Length; j++) {
-                        Console.Write(value.IsWhite ? SpacesToDots(valueLines[j]) : valueLines[j]);
+                        Console.Write(value.IsWhite
+                            ? SpacesToDots(valueLines[j])
+                            : valueLines[j]);
                         if (j < valueLines.Length - 1) {
                             MoveToNextLineStart();
                         }

@@ -6,53 +6,56 @@ using Newtonsoft.Json.Converters;
 namespace CodeConsole.ScriptBench {
     [JsonObject(MemberSerialization.OptIn)]
     public class ScriptBenchSettings {
-        public const string       DefaultConfigPath  = "ScriptBench.config.json";
-        public const ConsoleColor DefaultFramesColor = ConsoleColor.DarkGray;
+        [JsonIgnore] public const string DefaultConfigPath = "ScriptBench.config.json";
+
+        [JsonIgnore] public const ConsoleColor DefaultFramesColor = ConsoleColor.DarkGray;
 
         /// <summary>
         ///     Default text to be shown in editor's header.
         /// </summary>
-        [JsonProperty] public string DefaultHeader = "No errors found.";
+        public string DefaultHeader { get; } = "No errors found.";
 
         /// <summary>
         ///     Console color for editor UI.
         /// </summary>
-        [JsonProperty] public ConsoleColor MainColor = DefaultFramesColor;
+        public ConsoleColor MainColor { get; } = DefaultFramesColor;
 
         /// <summary>
         ///     Console color for editor UI elements.
         /// </summary>
-        [JsonProperty] public ConsoleColor AccentColor = ConsoleColor.Magenta;
+        public ConsoleColor AccentColor { get; } = ConsoleColor.Magenta;
 
         /// <summary>
         ///     User prompt used in single-line mode.
         /// </summary>
-        [JsonProperty] public readonly string SingleLinePrompt;
+        public string SingleLinePrompt { get; }
 
         /// <summary>
         ///     Tab character used in editor.
         /// </summary>
-        [JsonProperty] public int TabSize;
+        public int TabSize { get; set; }
 
         /// <summary>
         ///     Tab character used in editor.
         /// </summary>
+        [JsonIgnore]
         public string Tabulation => new string(' ', TabSize);
 
         /// <summary>
         ///     If true, highlights leading whitespaces as unicode middle-dots.
         /// </summary>
-        [JsonProperty] public bool ShowWhitespaces;
+        public bool ShowWhitespaces { get; }
 
-        [JsonProperty] public BoxDrawingCharactersCollection DrawingChars =
-            new BoxDrawingCharactersCollection();
+        public BoxDrawingCharactersCollection DrawingChars { get; } = new();
 
         public ScriptBenchSettings(string prompt = null) {
             SingleLinePrompt = prompt ?? "";
-            TabSize          = 4;
+            TabSize = 4;
         }
 
-        public static ScriptBenchSettings FromConfigFile(string filePath = DefaultConfigPath) {
+        public static ScriptBenchSettings FromConfigFile(
+            string filePath = DefaultConfigPath
+        ) {
             if (!Path.IsPathRooted(filePath)) {
                 filePath = Path.Join(AppDomain.CurrentDomain.BaseDirectory, filePath);
             }
@@ -61,7 +64,8 @@ namespace CodeConsole.ScriptBench {
             }
             string json = File.ReadAllText(filePath);
             try {
-                return JsonConvert.DeserializeObject<ScriptBenchSettings>(json, serializerSettings);
+                return JsonConvert.DeserializeObject<ScriptBenchSettings>(json,
+                    serializerSettings);
             }
             catch (Exception ex) {
                 Console.WriteLine();
@@ -80,11 +84,12 @@ namespace CodeConsole.ScriptBench {
         }
 
         public void SaveConfigFile(string filePath = DefaultConfigPath) {
-            File.WriteAllText(filePath, JsonConvert.SerializeObject(this, serializerSettings));
+            File.WriteAllText(filePath,
+                JsonConvert.SerializeObject(this, serializerSettings));
         }
 
         static JsonSerializerSettings serializerSettings = new JsonSerializerSettings {
-            Formatting       = Formatting.Indented,
+            Formatting = Formatting.Indented,
             TypeNameHandling = TypeNameHandling.Auto,
             Converters = {
                 new SafeEnumConverter<ConsoleColor>(ConsoleColor.DarkGray)
@@ -96,17 +101,17 @@ namespace CodeConsole.ScriptBench {
         /// </summary>
         [JsonObject]
         public class BoxDrawingCharactersCollection {
-            public char DownRight      = '┌';
-            public char DownLeft       = '┐';
-            public char UpRight        = '└';
-            public char UpLeft         = '┘';
-            public char Vertical       = '│';
-            public char VerticalRight  = '├';
-            public char VerticalLeft   = '┤';
-            public char Horizontal     = '─';
-            public char HorizontalDown = '┬';
-            public char HorizontalUp   = '┴';
-            public char Cross          = '┼';
+            public char DownRight { get; } = '┌';
+            public char DownLeft { get; } = '┐';
+            public char UpRight { get; } = '└';
+            public char UpLeft { get; } = '┘';
+            public char Vertical { get; } = '│';
+            public char VerticalRight { get; } = '├';
+            public char VerticalLeft { get; } = '┤';
+            public char Horizontal { get; } = '─';
+            public char HorizontalDown { get; } = '┬';
+            public char HorizontalUp { get; } = '┴';
+            public char Cross { get; } = '┼';
         }
 
         public class SafeEnumConverter<T> : StringEnumConverter
