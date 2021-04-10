@@ -50,7 +50,7 @@ namespace CodeConsole.ScriptBench {
 
         public ScriptBenchSettings(string prompt = null) {
             SingleLinePrompt = prompt ?? "";
-            TabSize = 4;
+            TabSize          = 4;
         }
 
         public static ScriptBenchSettings FromConfigFile(
@@ -89,7 +89,7 @@ namespace CodeConsole.ScriptBench {
         }
 
         static JsonSerializerSettings serializerSettings = new JsonSerializerSettings {
-            Formatting = Formatting.Indented,
+            Formatting       = Formatting.Indented,
             TypeNameHandling = TypeNameHandling.Auto,
             Converters = {
                 new SafeEnumConverter<ConsoleColor>(ConsoleColor.DarkGray)

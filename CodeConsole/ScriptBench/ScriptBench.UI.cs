@@ -140,7 +140,7 @@ namespace CodeConsole.ScriptBench {
         /// </summary>
         public void EnsureWindowSize(int minW = 50, int minH = 30) {
             if (Console.WindowWidth < minW) {
-                lastWidthToEnsure = Math.Max(lastWidthToEnsure, minW);
+                lastWidthToEnsure   = Math.Max(lastWidthToEnsure, minW);
                 Console.WindowWidth = lastWidthToEnsure;
             }
             if (Console.BufferHeight < minH) {
@@ -215,7 +215,7 @@ namespace CodeConsole.ScriptBench {
             }
 
             // move to editor lower bound
-            cursorY = lines.Count;
+            cursorY            = lines.Count;
             Console.CursorLeft = 0;
             // render lower bound
             var prefix = new string(settings.DrawingChars.Horizontal, 6)

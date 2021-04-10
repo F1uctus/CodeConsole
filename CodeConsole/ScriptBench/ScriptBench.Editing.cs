@@ -96,27 +96,25 @@ namespace CodeConsole.ScriptBench {
             }
 
             // cursor doesn't move when removing right character
-            ConsoleUtils.WithCurrentPosition(
-                () => {
-                    if (cursorX == line.Length) {
-                        // remove current line
-                        // append next line to current
-                        lines[cursorY] += lines[cursorY + 1];
-                        // remove next line
-                        lines.RemoveAt(cursorY + 1);
-                        RenderCode();
-                    }
-                    // if cursor inside the current line
-                    else if (line.Substring(cursorX).TrimEnd().Length == 0) {
-                        // don't redraw line when at the right
-                        // side of cursor are only whitespaces.
-                        lines[cursorY] = lines[cursorY].Substring(0, line.Length - 1);
-                    }
-                    else {
-                        line = line.Remove(cursorX, 1);
-                    }
+            ConsoleUtils.WithCurrentPosition(() => {
+                if (cursorX == line.Length) {
+                    // remove current line
+                    // append next line to current
+                    lines[cursorY] += lines[cursorY + 1];
+                    // remove next line
+                    lines.RemoveAt(cursorY + 1);
+                    RenderCode();
                 }
-            );
+                // if cursor inside the current line
+                else if (line.Substring(cursorX).TrimEnd().Length == 0) {
+                    // don't redraw line when at the right
+                    // side of cursor are only whitespaces.
+                    lines[cursorY] = lines[cursorY].Substring(0, line.Length - 1);
+                }
+                else {
+                    line = line.Remove(cursorX, 1);
+                }
+            });
         }
 
         /// <summary>

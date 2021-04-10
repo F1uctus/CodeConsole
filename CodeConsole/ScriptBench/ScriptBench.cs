@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -11,7 +11,7 @@ namespace CodeConsole.ScriptBench {
     /// </summary>
     public partial class ScriptBench {
         static readonly Assembly coreAsm = Assembly.GetExecutingAssembly();
-        public static readonly  string   Version = coreAsm.GetName().Version.ToString();
+        public static readonly string Version = coreAsm.GetName().Version.ToString();
 
         /// <summary>
         ///     Editor's instance-specific settings.
@@ -136,7 +136,9 @@ namespace CodeConsole.ScriptBench {
             }
 
             // remove empty editor box
-            if (!singleLineMode && lines.Count == 1 && string.IsNullOrWhiteSpace(lines[0])) {
+            if (!singleLineMode
+             && lines.Count == 1
+             && string.IsNullOrWhiteSpace(lines[0])) {
                 ClearLine(true);
                 for (var i = 0; i < 3; i++) {
                     Console.CursorTop--;
@@ -299,17 +301,17 @@ namespace CodeConsole.ScriptBench {
                 string clipText = clipboard.GetText();
                 if (!string.IsNullOrWhiteSpace(clipText)) {
                     List<string> linesToPaste = clipText
-                                                .Replace(
-                                                    "\t",
-                                                    settings.Tabulation
-                                                )
-                                                .Split(
-                                                    new[] {
-                                                        Environment.NewLine
-                                                    },
-                                                    StringSplitOptions.None
-                                                )
-                                                .ToList();
+                        .Replace(
+                            "\t",
+                            settings.Tabulation
+                        )
+                        .Split(
+                            new[] {
+                                Environment.NewLine
+                            },
+                            StringSplitOptions.None
+                        )
+                        .ToList();
                     if (linesToPaste.Count > 0) {
                         int k = cursorY;
                         lines[k] += linesToPaste[0];
@@ -449,7 +451,9 @@ namespace CodeConsole.ScriptBench {
                 break;
             }
             default: {
-                throw new Exception($"Cannot move cursor with specified key: '{direction:G}'.");
+                throw new Exception(
+                    $"Cannot move cursor with specified key: '{direction:G}'."
+                );
             }
             }
         }

@@ -17,9 +17,9 @@ namespace CodeConsole {
 
     [DebuggerDisplay("{" + nameof(debuggerDisplay) + ",nq}")]
     public class ColoredValue {
-        public ConsoleColor Color   { get; }
-        public string       Value   { get; set; }
-        public bool         IsWhite { get; }
+        public ConsoleColor Color { get; }
+        public string Value { get; set; }
+        public bool IsWhite { get; }
 
         public ColoredValue(string value, ConsoleColor color, bool isWhite = false) {
             Value   = value;
@@ -31,9 +31,13 @@ namespace CodeConsole {
         string debuggerDisplay =>
             $"{Color:G}: '{HttpUtility.JavaScriptStringEncode(Value)}'";
 
-        public void Deconstruct(out ConsoleColor color, out string value, out bool isWhite) {
-            color = Color;
-            value = Value;
+        public void Deconstruct(
+            out ConsoleColor color,
+            out string       value,
+            out bool         isWhite
+        ) {
+            color   = Color;
+            value   = Value;
             isWhite = IsWhite;
         }
     }
