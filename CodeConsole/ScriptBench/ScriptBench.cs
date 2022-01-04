@@ -4,164 +4,168 @@ using System.Linq;
 using System.Reflection;
 using TextCopy;
 
-namespace CodeConsole.ScriptBench {
+namespace CodeConsole.ScriptBench;
+
+/// <summary>
+///     ScriptBench - console code editor with optional
+///     syntax highlighting & handy keyboard shortcuts.
+/// </summary>
+public partial class ScriptBench {
+    static readonly Assembly coreAsm = Assembly.GetExecutingAssembly();
+    public static readonly string Version = coreAsm.GetName().Version.ToString();
+
+    readonly Clipboard clipboard = new();
+
     /// <summary>
-    ///     ScriptBench - console code editor with optional
-    ///     syntax highlighting & handy keyboard shortcuts.
+    ///     Current enabled syntax highlighter.
     /// </summary>
-    public partial class ScriptBench {
-        static readonly Assembly coreAsm = Assembly.GetExecutingAssembly();
-        public static readonly string Version = coreAsm.GetName().Version.ToString();
+    readonly IScriptBenchSyntaxHighlighter highlighter;
 
-        /// <summary>
-        ///     Editor's instance-specific settings.
-        /// </summary>
-        readonly ScriptBenchSettings settings;
+    /// <summary>
+    ///     Editor's code lines.
+    /// </summary>
+    readonly List<string> lines = new();
 
-        /// <summary>
-        ///     Use only 1 editable line.
-        /// </summary>
-        readonly bool singleLineMode;
+    /// <summary>
+    ///     Editor's instance-specific settings.
+    /// </summary>
+    readonly ScriptBenchSettings settings;
 
-        /// <summary>
-        ///     Current enabled syntax highlighter.
-        /// </summary>
-        readonly IScriptBenchSyntaxHighlighter highlighter;
+    /// <summary>
+    ///     Use only 1 editable line.
+    /// </summary>
+    readonly bool singleLineMode;
 
-        /// <summary>
-        ///     Highlight user input with specified <see cref="highlighter" />.
-        ///     True if highlighter is not null.
-        /// </summary>
-        bool syntaxHighlighting => highlighter != null;
+    int lastXPosition;
 
-        /// <summary>
-        ///     Editor's code lines.
-        /// </summary>
-        readonly List<string> lines = new();
+    /// <summary>
+    ///     Highlight user input with specified <see cref="highlighter" />.
+    ///     True if highlighter is not null.
+    /// </summary>
+    bool syntaxHighlighting => highlighter != null;
 
-        /// <summary>
-        ///     Current editing line.
-        ///     This property automatically calls
-        ///     <see cref="RenderCode" /> when modified.
-        ///     You should use <see cref="lines" />[<see cref="cursorY" />] when you
-        ///     don't want to re-render input instead.
-        /// </summary>
-        string line {
-            get => lines[cursorY];
-            set {
-                lines[cursorY] = value;
-                // render when modified
-                RenderCode();
-            }
-        }
-
-        /// <summary>
-        ///     A wrapper over <see cref="Console.CursorLeft" />.
-        ///     Position is relative to <see cref="editBoxPoint" />.
-        /// </summary>
-        int cursorX {
-            // check that value is in bounds
-            get => Console.CursorLeft - editBoxPoint.X;
-            set => Console.CursorLeft = value + editBoxPoint.X;
-        }
-
-        /// <summary>
-        ///     A wrapper over <see cref="Console.CursorTop" />.
-        ///     Position is relative to <see cref="editBoxPoint" />.
-        /// </summary>
-        int cursorY {
-            get => Console.CursorTop - editBoxPoint.Y;
-            set {
-                var top = value + editBoxPoint.Y;
-                if (Console.BufferHeight <= top) {
-                    Console.BufferHeight = top + 1;
-                }
-                Console.CursorTop = top;
-            }
-        }
-
-        readonly Clipboard clipboard = new();
-
-        /// <summary>
-        ///     Initializes the editor background.
-        ///     To actually launch it with UI,
-        ///     use <see cref="Run"/> method.
-        /// </summary>
-        public ScriptBench(
-            ScriptBenchSettings           settings       = null,
-            string                        firstCodeLine  = "",
-            bool                          singleLineMode = false,
-            IScriptBenchSyntaxHighlighter highlighter    = null
-        ) {
-            this.settings       = settings ?? ScriptBenchSettings.FromConfigFile();
-            this.singleLineMode = singleLineMode;
-            this.highlighter    = highlighter;
-            lines.Add(firstCodeLine);
-        }
-
-        /// <summary>
-        ///     Starts the editor (does UI drawing, highlighting, etc).
-        ///     Returns code lines when user finished editing.
-        /// </summary>
-        public string[] Run() {
-            if (singleLineMode) {
-                ConsoleUtils.ClearLine();
-                Console.Write(settings.SingleLinePrompt);
-            }
-
-            EnsureWindowSize();
-            DrawTopFrame();
-
-            // mark editor's edit box coordinates
-            editBoxPoint.X = singleLineMode
-                ? settings.SingleLinePrompt.Length
-                : 8;
-            editBoxPoint.Y = Console.CursorTop;
-            cursorX        = line.Length;
-
-            // highlight first line
+    /// <summary>
+    ///     Current editing line.
+    ///     This property automatically calls
+    ///     <see cref="RenderCode" /> when modified.
+    ///     You should use <see cref="lines" />[<see cref="cursorY" />] when you
+    ///     don't want to re-render input instead.
+    /// </summary>
+    string line {
+        get => lines[cursorY];
+        set {
+            lines[cursorY] = value;
+            // render when modified
             RenderCode();
+        }
+    }
 
-            var exit = false;
-            while (!exit) {
-                ConsoleKeyInfo key = Console.ReadKey(true);
-                EnsureWindowSize();
-                if (HandleCursorAction(key)) {
-                    continue;
-                }
-                exit = HandleEditAction(key);
+    /// <summary>
+    ///     A wrapper over <see cref="Console.CursorLeft" />.
+    ///     Position is relative to <see cref="editBoxPoint" />.
+    /// </summary>
+    int cursorX {
+        // check that value is in bounds
+        get => Console.CursorLeft - editBoxPoint.X;
+        set => Console.CursorLeft = value + editBoxPoint.X;
+    }
+
+    /// <summary>
+    ///     A wrapper over <see cref="Console.CursorTop" />.
+    ///     Position is relative to <see cref="editBoxPoint" />.
+    /// </summary>
+    int cursorY {
+        get => Console.CursorTop - editBoxPoint.Y;
+        set {
+            var top = value + editBoxPoint.Y;
+            if (Console.BufferHeight <= top) {
+                Console.BufferHeight = top + 1;
             }
+            Console.CursorTop = top;
+        }
+    }
 
-            // remove empty editor box
-            if (!singleLineMode
-             && lines.Count == 1
-             && string.IsNullOrWhiteSpace(lines[0])) {
-                ClearLine(true);
-                for (var i = 0; i < 3; i++) {
-                    Console.CursorTop--;
-                    ClearLine(true);
-                }
-                return lines.ToArray();
-            }
+    /// <summary>
+    ///     Initializes the editor background.
+    ///     To actually launch it with UI,
+    ///     use <see cref="Run" /> method.
+    /// </summary>
+    public ScriptBench(
+        ScriptBenchSettings           settings       = null,
+        string                        firstCodeLine  = "",
+        bool                          singleLineMode = false,
+        IScriptBenchSyntaxHighlighter highlighter    = null
+    ) {
+        this.settings       = settings ?? ScriptBenchSettings.FromConfigFile();
+        this.singleLineMode = singleLineMode;
+        this.highlighter    = highlighter;
+        lines.Add(firstCodeLine);
+    }
 
-            DrawBottomFrame();
-
-            settings.CreateMissingConfig();
-
-            return lines.Count == 0
-                ? new[] {
-                    ""
-                }
-                : lines.ToArray();
+    /// <summary>
+    ///     Starts the editor (does UI drawing, highlighting, etc).
+    ///     Returns code lines when user finished editing.
+    /// </summary>
+    public string[] Run() {
+        if (singleLineMode) {
+            ConsoleUtils.ClearLine();
+            Console.Write(settings.SingleLinePrompt);
         }
 
-        /// <summary>
-        ///     Handles actions that causes cursor to move cursor somehow.
-        ///     Doesn't mess with editing code at all.
-        /// </summary>
-        bool HandleCursorAction(ConsoleKeyInfo key) {
-            var handled = true;
-            switch (key.Key) {
+        EnsureWindowSize();
+        DrawTopFrame();
+
+        // mark editor's edit box coordinates
+        editBoxPoint.X = singleLineMode
+            ? settings.SingleLinePrompt.Length
+            : 8;
+        editBoxPoint.Y = Console.CursorTop;
+        cursorX        = line.Length;
+
+        // highlight first line
+        RenderCode();
+
+        var exit = false;
+        while (!exit) {
+            var key = Console.ReadKey(true);
+            EnsureWindowSize();
+            if (HandleCursorAction(key)) {
+                continue;
+            }
+
+            exit = HandleEditAction(key);
+        }
+
+        // remove empty editor box
+        if (!singleLineMode
+         && lines.Count == 1
+         && string.IsNullOrWhiteSpace(lines[0])) {
+            ClearLine(true);
+            for (var i = 0; i < 3; i++) {
+                Console.CursorTop--;
+                ClearLine(true);
+            }
+            return lines.ToArray();
+        }
+
+        DrawBottomFrame();
+
+        settings.CreateMissingConfig();
+
+        return lines.Count == 0
+            ? new[] {
+                ""
+            }
+            : lines.ToArray();
+    }
+
+    /// <summary>
+    ///     Handles actions that causes cursor to move cursor somehow.
+    ///     Doesn't mess with editing code at all.
+    /// </summary>
+    bool HandleCursorAction(ConsoleKeyInfo key) {
+        var handled = true;
+        switch (key.Key) {
             #region Move cursor with arrows
 
             case ConsoleKey.LeftArrow:
@@ -220,22 +224,22 @@ namespace CodeConsole.ScriptBench {
                 handled = false;
                 break;
             }
-            }
-
-            if (handled) {
-                newRenderStartPosition.Y = cursorY;
-                newRenderStartPosition.X = cursorX;
-            }
-
-            return handled;
         }
 
-        /// <summary>
-        ///     Handles actions that cause code editing.
-        ///     Returns true if user requested editor exit.
-        /// </summary>
-        bool HandleEditAction(ConsoleKeyInfo key) {
-            switch (key.Key) {
+        if (handled) {
+            newRenderStartPosition.Y = cursorY;
+            newRenderStartPosition.X = cursorX;
+        }
+
+        return handled;
+    }
+
+    /// <summary>
+    ///     Handles actions that cause code editing.
+    ///     Returns true if user requested editor exit.
+    /// </summary>
+    bool HandleEditAction(ConsoleKeyInfo key) {
+        switch (key.Key) {
             case ConsoleKey.Escape: {
                 // use [Enter] in single line mode instead.
                 if (singleLineMode) {
@@ -362,18 +366,17 @@ namespace CodeConsole.ScriptBench {
                 WriteValue(key.KeyChar);
                 break;
             }
-            }
-
-            return false;
         }
 
-        int lastXPosition;
+        return false;
+    }
 
-        /// <summary>
-        ///     Moves cursor in edit box to specified <see cref="direction" /> by specified <see cref="length"/>.
-        /// </summary>
-        void MoveCursor(ConsoleKey direction, int length = 1) {
-            switch (direction) {
+    /// <summary>
+    ///     Moves cursor in edit box to specified <see cref="direction" /> by specified
+    ///     <see cref="length" />.
+    /// </summary>
+    void MoveCursor(ConsoleKey direction, int length = 1) {
+        switch (direction) {
             case ConsoleKey.LeftArrow: {
                 // if reach first line start
                 if (cursorY == 0 && cursorX - length < 0) {
@@ -452,20 +455,19 @@ namespace CodeConsole.ScriptBench {
                     $"Cannot move cursor with specified key: '{direction:G}'."
                 );
             }
-            }
+        }
+    }
+
+    /// <summary>
+    ///     Moves cursor to next line start.
+    ///     Automatically writes appropriate line number.
+    /// </summary>
+    void MoveToNextLineStart() {
+        cursorY++;
+        if (cursorY == lines.Count) {
+            ClearLine();
         }
 
-        /// <summary>
-        ///     Moves cursor to next line start.
-        ///     Automatically writes appropriate line number. 
-        /// </summary>
-        void MoveToNextLineStart() {
-            cursorY++;
-            if (cursorY == lines.Count) {
-                ClearLine();
-            }
-
-            cursorX = 0;
-        }
+        cursorX = 0;
     }
 }

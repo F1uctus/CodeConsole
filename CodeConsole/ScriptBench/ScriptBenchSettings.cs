@@ -3,142 +3,147 @@ using System.IO;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
-namespace CodeConsole.ScriptBench {
-    [JsonObject(MemberSerialization.OptIn)]
-    public class ScriptBenchSettings {
-        [JsonIgnore] public const string DefaultConfigPath = "ScriptBench.config.json";
+namespace CodeConsole.ScriptBench;
 
-        [JsonIgnore] public const ConsoleColor DefaultFramesColor = ConsoleColor.DarkGray;
+[JsonObject(MemberSerialization.OptIn)]
+public class ScriptBenchSettings {
+    [JsonIgnore] public const string DefaultConfigPath = "ScriptBench.config.json";
 
-        /// <summary>
-        ///     Default text to be shown in editor's header.
-        /// </summary>
-        public string DefaultHeader { get; } = "No errors found.";
+    [JsonIgnore] public const ConsoleColor DefaultFramesColor = ConsoleColor.DarkGray;
 
-        /// <summary>
-        ///     Console color for editor UI.
-        /// </summary>
-        public ConsoleColor MainColor { get; } = DefaultFramesColor;
+    static JsonSerializerSettings serializerSettings = new() {
+        Formatting       = Formatting.Indented,
+        TypeNameHandling = TypeNameHandling.Auto,
+        Converters = {
+            new SafeEnumConverter<ConsoleColor>(ConsoleColor.DarkGray)
+        }
+    };
 
-        /// <summary>
-        ///     Console color for editor UI elements.
-        /// </summary>
-        public ConsoleColor AccentColor { get; } = ConsoleColor.Magenta;
+    /// <summary>
+    ///     Default text to be shown in editor's header.
+    /// </summary>
+    public string DefaultHeader { get; } = "No errors found.";
 
-        /// <summary>
-        ///     User prompt used in single-line mode.
-        /// </summary>
-        public string SingleLinePrompt { get; }
+    /// <summary>
+    ///     Console color for editor UI.
+    /// </summary>
+    public ConsoleColor MainColor { get; } = DefaultFramesColor;
 
-        /// <summary>
-        ///     Tab character used in editor.
-        /// </summary>
-        public int TabSize { get; set; }
+    /// <summary>
+    ///     Console color for editor UI elements.
+    /// </summary>
+    public ConsoleColor AccentColor { get; } = ConsoleColor.Magenta;
 
-        /// <summary>
-        ///     Tab character used in editor.
-        /// </summary>
-        [JsonIgnore]
-        public string Tabulation => new(' ', TabSize);
+    /// <summary>
+    ///     User prompt used in single-line mode.
+    /// </summary>
+    public string SingleLinePrompt { get; }
 
-        /// <summary>
-        ///     If true, highlights leading whitespaces as unicode middle-dots.
-        /// </summary>
-        public bool ShowWhitespaces { get; }
+    /// <summary>
+    ///     Tab character used in editor.
+    /// </summary>
+    public int TabSize { get; set; }
 
-        public BoxDrawingCharactersCollection DrawingChars { get; } = new();
+    /// <summary>
+    ///     Tab character used in editor.
+    /// </summary>
+    [JsonIgnore]
+    public string Tabulation => new(' ', TabSize);
 
-        public ScriptBenchSettings(string prompt = null) {
-            SingleLinePrompt = prompt ?? "";
-            TabSize          = 4;
+    /// <summary>
+    ///     If true, highlights leading whitespaces as unicode middle-dots.
+    /// </summary>
+    public bool ShowWhitespaces { get; }
+
+    public BoxDrawingCharactersCollection DrawingChars { get; } = new();
+
+    public ScriptBenchSettings(string prompt = null) {
+        SingleLinePrompt = prompt ?? "";
+        TabSize          = 4;
+    }
+
+    public static ScriptBenchSettings FromConfigFile(
+        string filePath = DefaultConfigPath
+    ) {
+        if (!Path.IsPathRooted(filePath)) {
+            filePath = Path.Join(AppDomain.CurrentDomain.BaseDirectory, filePath);
+        }
+        if (!File.Exists(filePath)) {
+            return new ScriptBenchSettings();
         }
 
-        public static ScriptBenchSettings FromConfigFile(
-            string filePath = DefaultConfigPath
+        var json = File.ReadAllText(filePath);
+        try {
+            return JsonConvert.DeserializeObject<ScriptBenchSettings>(
+                json,
+                serializerSettings
+            );
+        }
+        catch (Exception ex) {
+            Console.WriteLine();
+            ConsoleUtils.WriteLine(
+                ("ScriptBench reported error while reading config:", ConsoleColor.Red)
+            );
+            Console.WriteLine(ex.Message);
+            return new ScriptBenchSettings();
+        }
+    }
+
+    public void CreateMissingConfig() {
+        if (!File.Exists(DefaultConfigPath)) {
+            SaveConfigFile();
+        }
+    }
+
+    public void SaveConfigFile(string filePath = DefaultConfigPath) {
+        File.WriteAllText(
+            filePath,
+            JsonConvert.SerializeObject(this, serializerSettings)
+        );
+    }
+
+    /// <summary>
+    ///     ┌  ┐  └  ┘  │  ├  ┤  ─  ┬  ┴  ┼
+    /// </summary>
+    [JsonObject]
+    public class BoxDrawingCharactersCollection {
+        public char DownRight { get; } = '┌';
+        public char DownLeft { get; } = '┐';
+        public char UpRight { get; } = '└';
+        public char UpLeft { get; } = '┘';
+        public char Vertical { get; } = '│';
+        public char VerticalRight { get; } = '├';
+        public char VerticalLeft { get; } = '┤';
+        public char Horizontal { get; } = '─';
+        public char HorizontalDown { get; } = '┬';
+        public char HorizontalUp { get; } = '┴';
+        public char Cross { get; } = '┼';
+    }
+
+    public class SafeEnumConverter<T> : StringEnumConverter
+        where T : Enum {
+        T DefaultValue { get; }
+
+        public SafeEnumConverter(T defaultValue) {
+            DefaultValue = defaultValue;
+        }
+
+        public override object ReadJson(
+            JsonReader     reader,
+            Type           objectType,
+            object         existingValue,
+            JsonSerializer serializer
         ) {
-            if (!Path.IsPathRooted(filePath)) {
-                filePath = Path.Join(AppDomain.CurrentDomain.BaseDirectory, filePath);
-            }
-            if (!File.Exists(filePath)) {
-                return new ScriptBenchSettings();
-            }
-            var json = File.ReadAllText(filePath);
             try {
-                return JsonConvert.DeserializeObject<ScriptBenchSettings>(json,
-                    serializerSettings);
-            }
-            catch (Exception ex) {
-                Console.WriteLine();
-                ConsoleUtils.WriteLine(
-                    ("ScriptBench reported error while reading config:", ConsoleColor.Red)
+                return base.ReadJson(
+                    reader,
+                    objectType,
+                    existingValue,
+                    serializer
                 );
-                Console.WriteLine(ex.Message);
-                return new ScriptBenchSettings();
             }
-        }
-
-        public void CreateMissingConfig() {
-            if (!File.Exists(DefaultConfigPath)) {
-                SaveConfigFile();
-            }
-        }
-
-        public void SaveConfigFile(string filePath = DefaultConfigPath) {
-            File.WriteAllText(filePath,
-                JsonConvert.SerializeObject(this, serializerSettings));
-        }
-
-        static JsonSerializerSettings serializerSettings = new() {
-            Formatting       = Formatting.Indented,
-            TypeNameHandling = TypeNameHandling.Auto,
-            Converters = {
-                new SafeEnumConverter<ConsoleColor>(ConsoleColor.DarkGray)
-            }
-        };
-
-        /// <summary>
-        ///     ┌  ┐  └  ┘  │  ├  ┤  ─  ┬  ┴  ┼
-        /// </summary>
-        [JsonObject]
-        public class BoxDrawingCharactersCollection {
-            public char DownRight { get; } = '┌';
-            public char DownLeft { get; } = '┐';
-            public char UpRight { get; } = '└';
-            public char UpLeft { get; } = '┘';
-            public char Vertical { get; } = '│';
-            public char VerticalRight { get; } = '├';
-            public char VerticalLeft { get; } = '┤';
-            public char Horizontal { get; } = '─';
-            public char HorizontalDown { get; } = '┬';
-            public char HorizontalUp { get; } = '┴';
-            public char Cross { get; } = '┼';
-        }
-
-        public class SafeEnumConverter<T> : StringEnumConverter
-            where T : Enum {
-            T DefaultValue { get; }
-
-            public SafeEnumConverter(T defaultValue) {
-                DefaultValue = defaultValue;
-            }
-
-            public override object ReadJson(
-                JsonReader     reader,
-                Type           objectType,
-                object         existingValue,
-                JsonSerializer serializer
-            ) {
-                try {
-                    return base.ReadJson(
-                        reader,
-                        objectType,
-                        existingValue,
-                        serializer
-                    );
-                }
-                catch (JsonSerializationException) {
-                    return DefaultValue;
-                }
+            catch (JsonSerializationException) {
+                return DefaultValue;
             }
         }
     }
